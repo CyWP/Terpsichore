@@ -12,7 +12,7 @@ class App(CTk):
 
         self.title('')
         self.iconbitmap('UI/Assets/dance.ico')
-        self.wm_minsize(width=400, height=200)
+        self.wm_minsize(width=400, height=300)
 
         self.top = CTkFrame(master=self, height=0)
         self.top.grid(row=0, column=0, sticky='new')

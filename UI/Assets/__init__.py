@@ -11,7 +11,7 @@ FONTS = {
     'h2':
     {
         'path': os.path.abspath('Assets/PPNeueMontreal-Medium.otf'),
-        'info': ('PP Neue Montreal Medium', 20)
+        'info': ('PP Neue Montreal Medium', 18)
     },
     'p':
     {
