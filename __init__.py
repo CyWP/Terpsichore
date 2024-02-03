@@ -1,6 +1,5 @@
-import customtkinter
 from loader import load
-from app import App
+from UI.app import App
 
 if __name__ == '__main__':
 

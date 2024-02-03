@@ -1,16 +1,17 @@
 from customtkinter import (CTkButton,
+                           CTkFrame,
                            CTkImage,
                            get_appearance_mode)
 from PIL import Image
 import matplotlib.colors as colors
 import numpy as np
-from Assets.theme_extras import (THEME,
-                                 BUTTON_TYPES,
-                                 getRandomHoverColor)
+from .Assets import (BUTTON_TYPES,
+                     getRandomHoverColor)
 
 class Button(CTkButton):
 
     def click(self, color):
+         self.fct(self.frame)
          self.colorButton(color)
          if self.bar is not None:             
             self.bar.configure(progress_color=color)
@@ -23,7 +24,15 @@ class Button(CTkButton):
             else:
                 self.configure(text_color=color)
 
-    def __init__(self, master, type, img=None, bar=None, barlevel=0., **kwargs):
+    def __init__(self,
+                 master,
+                 type,
+                 fct= lambda e: None,
+                 frame=None,
+                 img=None,
+                 bar=None,
+                 barlevel=0.,
+                 **kwargs):
 
         super().__init__(master,
                          font=BUTTON_TYPES[type]['font'],
@@ -32,6 +41,8 @@ class Button(CTkButton):
                          border_spacing=BUTTON_TYPES[type]['pad'],
                          **kwargs)
         
+        self.frame = frame
+        self.fct = fct
         self.bar = bar
         self.barlevel = barlevel
 
@@ -58,3 +69,14 @@ def colorize(filename, color):
     b = b.point(lambda i: replacement_color[2])
     img = Image.merge('RGBA', (r, g, b, a))
     return CTkImage(light_image=img, dark_image=img)
+
+
+class ConsciousFrame(CTkFrame):
+
+    def __init__(self, args, **kwargs):
+
+        super().__init__(args, **kwargs)
+        self.state = ''
+
+    def state(self, name):
+        return self.state == name

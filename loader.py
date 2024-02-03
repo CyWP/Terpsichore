@@ -1,11 +1,10 @@
 from customtkinter import(FontManager,
                           set_default_color_theme,
                           set_appearance_mode)
-from Assets.theme_extras import (THEME,
-                                 FONTS)
+from UI.Assets import FONTS
 
 def load():
-    set_default_color_theme('Assets/theme.json')
+    set_default_color_theme('UI/Assets/theme.json')
     set_appearance_mode('light')
     load_fonts()
 
