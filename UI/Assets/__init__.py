@@ -63,7 +63,7 @@ BUTTON_TYPES = {
                          'border_width': None},
                 'ACTION': { 'font': FONTS['tab']['info'],
                          'width': 0,
-                         'height': 0,
+                         'height': 18,
                          'pad': 3,
                          'border_width': 1}      
                 }

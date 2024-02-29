@@ -40,7 +40,7 @@ class App(CTk):
               self.bottom.grid(row=2, column=0, sticky='sew')
               self.bottom.rowconfigure(0, weight=1)
               self.bottom.rowconfigure(1, weight=0)
-              for i in range(9):
+              for i in range(8):
                      self.bottom.columnconfigure(i, weight=1)
 
               self.botbar = CTkProgressBar(self.bottom, corner_radius=0, height=4)
@@ -84,10 +84,10 @@ class App(CTk):
                      type='IMG',
                      img='UI/Assets/settings.png').grid(row=0, column=7, sticky='nesw')
               
-              Button(master=self.bottom,
+              '''Button(master=self.bottom,
                      text='',
                      type='IMG',
-                     img='UI/Assets/folder.png').grid(row=0, column=8, sticky='nesw')
+                     img='UI/Assets/folder.png').grid(row=0, column=8, sticky='nesw')'''
              
        async def mainloop(self, *args, **kwargs):
               while True:

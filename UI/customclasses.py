@@ -6,6 +6,8 @@ from customtkinter import (CTkButton,
                            CTkComboBox,
                            CTkRadioButton,
                            CTkEntry,
+                           CTkScrollableFrame,
+                           CTkSlider,
                            get_appearance_mode)
 from PIL import Image
 import matplotlib.colors as colors
@@ -84,6 +86,10 @@ class NormalFrame(CTkFrame):
 
         super().__init__(args, **kwargs)
 
+    def grid(self, **kwargs):
+         
+         super().grid(ipadx=5, **kwargs)
+
 class Label(CTkLabel):
 
     def __init__(self, args, **kwargs):
@@ -156,6 +162,50 @@ class RadioButton(CTkRadioButton):
 
 class Entry(CTkEntry):
      
-     def __init__(self, args, **kwargs):
+     def __init__(self, args, width=36, **kwargs):
           
-          super().__init__(args, height=18, font=FONTS['tab']['info'], **kwargs)
+          super().__init__(args, height=18, width=width, font=FONTS['tab']['info'], **kwargs)
+
+class ClassTable(CTkScrollableFrame):
+     
+    def __init__(self, args, **kwargs):
+          
+        super().__init__(args, corner_radius=1, border_width=1, width=200, height=80, **kwargs)
+
+        for i in range(3):
+            self.columnconfigure(i, weight=1)
+
+        Label(self, text='Gesture').grid(row=0, column=0, sticky='w')
+        Label(self, text='Samples').grid(row=0, column=1, sticky='')
+        Button(self, type='ACTION', text='New Gesture').grid(row=0, column=2, sticky='e')
+
+        self.update()
+
+    def update(self):
+        pass
+
+class LogFrame(CTkScrollableFrame):
+     
+    def __init__(self, args, **kwargs):
+          
+        super().__init__(args, corner_radius=1, border_width=1, width=200, height=80, **kwargs)
+
+        Label(self, text='Training Logs').pack(anchor='w', side='top')
+
+    def update(self, log):
+         Label(self, text=log).pack(anchor='w', side='top')
+
+class Slider(CTkSlider):
+     
+    def __init__(self, args, **kwargs):
+          
+        super().__init__(args, height=3, border_width=1, **kwargs)
+
+        self.bind('<Enter>', lambda event: self.colorButton(getRandomHoverColor()))
+        self.bind('<Button-1>', lambda event: self.click(getRandomHoverColor()))
+
+    def click(self, color):
+        self.colorButton(color)
+
+    def colorButton(self, color):
+            self.configure(button_color=color, progress_color=color)
