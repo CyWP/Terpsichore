@@ -15,8 +15,8 @@ FONTS = {
     },
     'p':
     {
-        'path': os.path.abspath('Assets/PPNeueMontreal-Medium.otf'),
-        'info': ('PP Neue Montreal Medium', 16)
+        'path': os.path.abspath('Assets/PPNeueMontreal-Book.otf'),
+        'info': ('PP Neue Montreal Medium', 14)
     },
     'tab':
     {
@@ -29,7 +29,9 @@ THEME = {
     'text_hover': '#5000ff',
     'hover_colors': (('#5000ff','#5000ff'),
                      ('#e525b9', '#e525b9'),
-                     ('#56c67d', '#56c67d'))
+                     ('#56c67d', '#56c67d')),
+    'widget_padding_x': 20,
+    'widget_padding_y': 5
 }
 
 def getRandomHoverColor(last_color=''):
@@ -42,17 +44,26 @@ BUTTON_TYPES = {
                 'BIG': { 'font': FONTS['h1']['info'],
                          'width': 0,
                          'height': 0,
-                         'pad': 4},
+                         'pad': 4,
+                         'border_width': None},
                 'MENU': {'font': FONTS['h2']['info'],
                          'width': 0,
                          'height': 0,
-                         'pad': 4},
+                         'pad': 4,
+                         'border_width': None},
                 'TAB': { 'font': FONTS['tab']['info'],
                          'width': 0,
                          'height': 0,
-                         'pad': 3},
+                         'pad': 3,
+                         'border_width': None},
                 'IMG': { 'font': FONTS['tab']['info'],
                          'width': 0,
                          'height': 0,
-                         'pad': 10}       
+                         'pad': 10,
+                         'border_width': None},
+                'ACTION': { 'font': FONTS['tab']['info'],
+                         'width': 0,
+                         'height': 0,
+                         'pad': 3,
+                         'border_width': 1}      
                 }

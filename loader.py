@@ -11,3 +11,6 @@ def load():
 def load_fonts():
     for font in FONTS:
         FontManager.load_font(FONTS[font]['path'])
+
+def load_props(master):
+    pass

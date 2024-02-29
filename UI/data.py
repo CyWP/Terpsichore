@@ -9,18 +9,12 @@ from .framedrawer import (drawHomeFrame,
 DRAW_FRAME = {
             '': lambda e: None,
             'Home': drawHomeFrame,
-            'Move': drawMoveFrame,
-            'Trace': drawTraceFrame,
-            'View': drawViewFrame,
-            'Input': drawInputFrame,
-            'Data': drawDataFrame,
-            'Train': drawTrainFrame
+            'Perform': drawMoveFrame,
+            'Record': drawTraceFrame,
+            'Train': drawViewFrame,
             }
 
-TABS = ('Move',
-        'Trace',
-        'View',
-        'Input',
-        'Data',
+TABS = ('Perform',
+        'Record',
         'Train')
 
