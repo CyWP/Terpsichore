@@ -17,7 +17,7 @@ class ConsciousFrame(CTkFrame):
 
     def __init__(self, master, *args, **kwargs):
 
-        super().__init__(master, *args, **kwargs)
+        super().__init__(master, width=0, height=0, *args, **kwargs)
         self.state = ''
         self.input_delay = StringVar(self, value='0')
         self.video_path = StringVar(self, 'path/to/video')
@@ -87,11 +87,16 @@ class ConsciousFrame(CTkFrame):
 
         if(self.clearFrame('Home')):
             
-            #bigbuttons = CTkFrame(master)
-            #bigbuttons.pack(anchor='sw', side='bottom')
-            Button(self, type='BIG', text='NEW').pack(anchor='sw', side='bottom')
-            Button(self, type='BIG', text='LOAD').pack(anchor='sw', side='bottom')
-            Button(self, type='BIG', text='LAST').pack(anchor='sw', side='bottom')
+            self.left = NormalFrame(self)
+            left = self.left
+            left.pack(side='left', anchor='sw')
+            Button(left, type='BIG', text='NEW').pack(anchor='sw', side='bottom')
+            Button(left, type='BIG', text='LOAD').pack(anchor='sw', side='bottom')
+            Button(left, type='BIG', text='LAST').pack(anchor='sw', side='bottom')
+            self.right = NormalFrame(self)
+            right = self.right
+            right.pack(side='right', expand=True, anchor='sw', fill='both')
+            right.columnconfigure(3, weight=1)
 
 
     def drawMoveFrame(self):
@@ -101,16 +106,15 @@ class ConsciousFrame(CTkFrame):
             left = self.left
             left.pack(side='left', anchor='sw')
             Button(left, type='BIG', text='MOVE').pack(anchor='sw', side='bottom')
+            self.pad = NormalFrame(self)
+            self.pad.pack(side='right', anchor='w', fill='y')
+            Label(self.pad, text='').pack(side='right')
             self.right = NormalFrame(self)
             right = self.right
             right.pack(side='right', expand=True, anchor='sw', fill='both')
             right.columnconfigure(3, weight=1)
 
             row = 0
-
-            Label(right, text='Active Model').grid(row=row, column=0, columnspan=1, sticky='w')
-            Label(right, text='Model Name').grid(row=row, column=2, columnspan=2, sticky='e')
-            row+=1
 
             Label(right, text='Input').grid(row=row, column=0, columnspan=1, sticky='w')
             self.webcam_rb = RadioButton(right, text='Webcam', command=self.set_input_webcam)
@@ -128,7 +132,7 @@ class ConsciousFrame(CTkFrame):
             row+=1
 
             Label(right, text='Output').grid(row=row, column=0, sticky='w')
-            self.classification_output = ComboBox(right, values=['Integer', 'Softmax'])
+            self.classification_output = ComboBox(right, values=['Integer', 'Softmax', 'One Hot'])
             self.classification_output.grid(row=row, column=1, columnspan=2, sticky='w')
             self.send_pose_data = CheckBox(right, text='Send Pose Data')
             self.send_pose_data.grid(row=row, column=2, columnspan=2, sticky='e')
@@ -159,16 +163,15 @@ class ConsciousFrame(CTkFrame):
             left.pack(side='left', anchor='sw')
             Button(left, type='BIG', text='RECORD').pack(anchor='sw', side='bottom')
             Button(left, type='BIG', text='UNDO').pack(anchor='sw', side='bottom')
+            self.pad = NormalFrame(self)
+            self.pad.pack(side='right', anchor='w', fill='y')
+            Label(self.pad, text='').pack(side='right')
             self.right = NormalFrame(self)
             right = self.right
             right.pack(side='right', expand=True, anchor='sw', fill='both')
             right.columnconfigure(3, weight=1)
 
             row = 0
-
-            Label(right, text='Active Model').grid(row=row, column=0, columnspan=1, sticky='w')
-            Label(right, text='Model Name').grid(row=row, column=2, columnspan=2, sticky='e')
-            row+=1
 
             Label(right, text='Input').grid(row=row, column=0, columnspan=1, sticky='w')
             self.webcam_rb = RadioButton(right, text='Webcam', command=self.set_input_webcam)
@@ -186,7 +189,7 @@ class ConsciousFrame(CTkFrame):
             row+=1
 
             self.class_table = ClassTable(right)
-            self.class_table.grid(row=row, rowspan=2, column=0, columnspan=4, sticky='new', ipadx=5)
+            self.class_table.grid(row=row, rowspan=2, column=0, columnspan=4, sticky='nesw', ipadx=5)
 
             right.rowconfigure(row, weight=0)
 
@@ -200,16 +203,15 @@ class ConsciousFrame(CTkFrame):
             left.pack(side='left', anchor='sw')
             Button(left, type='BIG', text='TRAIN').pack(anchor='sw', side='bottom')
             Button(left, type='BIG', text='STOP').pack(anchor='sw', side='bottom')
+            self.pad = NormalFrame(self)
+            self.pad.pack(side='right', anchor='w', fill='y')
+            Label(self.pad, text='').pack(side='right')
             self.right = NormalFrame(self)
             right = self.right
             right.pack(side='right', expand=True, anchor='sw', fill='both')
             right.columnconfigure(3, weight=1)
 
             row = 0
-
-            Label(right, text='Active Model').grid(row=row, column=0, columnspan=1, sticky='w')
-            Label(right, text='Model Name').grid(row=row, column=2, columnspan=2, sticky='e')
-            row+=1
 
             Label(right, text='Epochs').grid(row=row, column=0, columnspan=1, sticky='w')
             self.train_epochs = Entry(right, placeholder_text='10')
@@ -236,8 +238,11 @@ class ConsciousFrame(CTkFrame):
             row+=1
 
             self.logs_frame = LogFrame(right)
-            self.logs_frame.grid(row=row, rowspan=2, column=0, columnspan=4, sticky='new')
+            self.logs_frame.grid(row=row, rowspan=2, column=0, columnspan=4, sticky='nesw')
 
             right.rowconfigure(row, weight=0)
 
             self.spreadrows(row)
+
+    def log(self, msg):
+        self.logs_frame.update(msg)

@@ -84,7 +84,7 @@ class NormalFrame(CTkFrame):
 
     def __init__(self, args, **kwargs):
 
-        super().__init__(args, **kwargs)
+        super().__init__(args, width=0, height=0, **kwargs)
 
     def grid(self, **kwargs):
          
@@ -100,6 +100,20 @@ class Label(CTkLabel):
 
         super().grid(ipadx=THEME['widget_padding_x'],
                      ipady=THEME['widget_padding_y'],
+                     **kwargs)
+        
+class Log(CTkLabel):
+     
+    def __init__(self, args, **kwargs):
+
+        super().__init__(args, font=FONTS['tab']['info'], height=12, **kwargs)
+
+    def pack(self, **kwargs):
+
+        super().pack(ipadx=0,
+                     ipady=0,
+                     padx=0,
+                     pady=0,
                      **kwargs)
         
 class ComboBox(CTkComboBox):
@@ -170,7 +184,8 @@ class ClassTable(CTkScrollableFrame):
      
     def __init__(self, args, **kwargs):
           
-        super().__init__(args, corner_radius=1, border_width=1, width=200, height=80, **kwargs)
+        super().__init__(args, corner_radius=1, border_width=1, width=0, height=0, **kwargs)
+        self._scrollbar._set_dimensions(width=10, height=172)
 
         for i in range(3):
             self.columnconfigure(i, weight=1)
@@ -188,12 +203,16 @@ class LogFrame(CTkScrollableFrame):
      
     def __init__(self, args, **kwargs):
           
-        super().__init__(args, corner_radius=1, border_width=1, width=200, height=80, **kwargs)
-
+        super().__init__(args, corner_radius=1, border_width=1, width=180, height=132, **kwargs)
+        self._scrollbar._set_dimensions(width=10, height=120)
         Label(self, text='Training Logs').pack(anchor='w', side='top')
 
     def update(self, log):
          Label(self, text=log).pack(anchor='w', side='top')
+
+    def clear(self):
+         for child in self.winfo_children[1:]:
+              child.destroy()
 
 class Slider(CTkSlider):
      
