@@ -3,6 +3,7 @@ from customtkinter import(FontManager,
                           set_appearance_mode)
 from UI.Assets import FONTS
 
+
 def load():
     set_default_color_theme('UI/Assets/theme.json')
     set_appearance_mode('light')

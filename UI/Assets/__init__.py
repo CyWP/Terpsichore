@@ -16,12 +16,12 @@ FONTS = {
     'p':
     {
         'path': os.path.abspath('Assets/PPNeueMontreal-Book.otf'),
-        'info': ('PP Neue Montreal Medium', 12)
+        'info': ('PP Neue Montreal Book', 12)
     },
     'tab':
     {
         'path': os.path.abspath('Assets/PPNeueMontreal-Book.otf'),
-        'info': ('PP Neue Montreal Medium', 10)
+        'info': ('PP Neue Montreal Book', 10)
     }
     }
 

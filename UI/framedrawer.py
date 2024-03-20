@@ -1,5 +1,7 @@
 from customtkinter import (CTkFrame,
                            StringVar,
+                           IntVar,
+                           BooleanVar,
                            filedialog)
 from .customclasses import (Button,
                             CheckBox,
@@ -11,7 +13,7 @@ from .customclasses import (Button,
                             ClassTable,
                             Slider,
                             LogFrame)
-
+from appstate import AppState
 
 class ConsciousFrame(CTkFrame):
 
@@ -19,8 +21,12 @@ class ConsciousFrame(CTkFrame):
 
         super().__init__(master, width=0, height=0, *args, **kwargs)
         self.state = ''
-        self.input_delay = StringVar(self, value='0')
-        self.video_path = StringVar(self, 'path/to/video')
+        self.input_delay = IntVar(self, AppState.get_attr('delay'))
+        self.video_path = StringVar(self, value=AppState.get_attr('video_path'))
+        self.input_duration = IntVar(self, value=AppState.get_attr('duration'))
+        self.webcam_active = BooleanVar(self, value=AppState.get_attr('webcam_active'))
+        self.webcam_index = IntVar(self, value=AppState.get_attr('webcam_index'))
+        self.classification_output = StringVar(self, AppState.get_attr('class_output'))
         self.max_rows = 0
         for i in range(4):
             self.columnconfigure(i, weight=1)
@@ -52,8 +58,8 @@ class ConsciousFrame(CTkFrame):
 
       
     def set_input_video(self):
-        if self.webcam_active:
-            self.webcam_active = False
+        if self.webcam_active.get():
+            self.webcam_active.set(False)
             self.webcam_rb.deactivate()
             Label(self.input_settings_frame, text="Delay").grid(row=0, column=0, sticky='w')
             self.input_delay_entry = Entry(self.input_settings_frame, width=36, textvariable=self.input_delay)
@@ -63,18 +69,18 @@ class ConsciousFrame(CTkFrame):
             self.video_path_button.grid(row=0, column=3, columnspan=3, sticky='ew')
 
     def set_input_webcam(self):
-        if not self.webcam_active:
-            self.webcam_active = True
+        if not self.webcam_active.get():
+            self.webcam_active.set(True)
             self.video_rb.deactivate()
             Label(self.input_settings_frame, text="Delay").grid(row=0, column=0, sticky='w')
             self.input_delay_entry = Entry(self.input_settings_frame, width=36, textvariable=self.input_delay)
             self.input_delay_entry.grid(row=0, column=1, sticky='w')
             Label(self.input_settings_frame, text="Duration").grid(row=0, column=2, sticky='w')
-            self.input_duration = Entry(self.input_settings_frame, width=36, placeholder_text='0')
-            self.input_duration.grid(row=0, column=3, sticky='w')
+            self.input_duration_entry = Entry(self.input_settings_frame, width=36, textvariable=self.input_duration)
+            self.input_duration_entry.grid(row=0, column=3, sticky='w')
             Label(self.input_settings_frame, text="Index").grid(row=0, column=4, sticky='w')
-            self.webcam_index = Entry(self.input_settings_frame, width=36, placeholder_text='0')
-            self.webcam_index.grid(row=0, column=5, sticky='w')
+            self.webcam_index_entry = Entry(self.input_settings_frame, width=36, textvariable=self.webcam_index)
+            self.webcam_index_entry.grid(row=0, column=5, sticky='w')
             try:
                 self.video_path_button.destroy()
             except:
@@ -85,7 +91,7 @@ class ConsciousFrame(CTkFrame):
 
     def drawHomeFrame(self):
 
-        if(self.clearFrame('Home')):
+        if(self.clearFrame('home')):
             
             self.left = NormalFrame(self)
             left = self.left
@@ -101,7 +107,7 @@ class ConsciousFrame(CTkFrame):
 
     def drawMoveFrame(self):
         
-        if(self.clearFrame('Perform')):
+        if(self.clearFrame('move')):
             self.left = NormalFrame(self)
             left = self.left
             left.pack(side='left', anchor='sw')
@@ -123,19 +129,23 @@ class ConsciousFrame(CTkFrame):
             self.video_rb.grid(row=row, column=3, sticky='w')
             row+=1
 
-            self.webcam_active = False
             self.input_settings_frame = NormalFrame(right)
             self.input_settings_frame.grid(row=row, column=0, columnspan=4, sticky='nesw')
             for i in range(6):
                 self.input_settings_frame.columnconfigure(i, weight=1)
-            self.webcam_rb.invoke()
+            if self.webcam_active.get():
+                self.webcam_active.set(False)
+                self.webcam_rb.invoke()
+            else:
+                self.webcam_active.set(True)
+                self.video_rb.invoke()
             row+=1
 
             Label(right, text='Output').grid(row=row, column=0, sticky='w')
-            self.classification_output = ComboBox(right, values=['Integer', 'Softmax', 'One Hot'])
-            self.classification_output.grid(row=row, column=1, columnspan=2, sticky='w')
-            self.send_pose_data = CheckBox(right, text='Send Pose Data')
-            self.send_pose_data.grid(row=row, column=2, columnspan=2, sticky='e')
+            self.classification_output_box = ComboBox(right, values=AppState._classification_outputs, variable=self.classification_output)
+            self.classification_output_box.grid(row=row, column=1, columnspan=2, sticky='w')
+            self.send_pose_data_box = CheckBox(right, text='Send Pose Data')
+            self.send_pose_data_box.grid(row=row, column=2, columnspan=2, sticky='e')
             row+=1
 
             Label(right, text='Display').grid(row=row, column=0, sticky='w')
@@ -156,7 +166,7 @@ class ConsciousFrame(CTkFrame):
 
     def drawTraceFrame(self):
         
-        if(self.clearFrame('Record')):
+        if(self.clearFrame('record')):
             
             self.left = NormalFrame(self)
             left = self.left
@@ -180,12 +190,16 @@ class ConsciousFrame(CTkFrame):
             self.video_rb.grid(row=row, column=3, sticky='')
             row+=1
 
-            self.webcam_active = False
             self.input_settings_frame = NormalFrame(right)
             self.input_settings_frame.grid(row=row, column=0, columnspan=4, sticky='nesw')
             for i in range(6):
                 self.input_settings_frame.columnconfigure(i, weight=1)
-            self.webcam_rb.invoke()
+            if self.webcam_active.get():
+                self.webcam_active.set(False)
+                self.webcam_rb.invoke()
+            else:
+                self.webcam_active.set(True)
+                self.video_rb.invoke()
             row+=1
 
             self.class_table = ClassTable(right)
@@ -197,7 +211,7 @@ class ConsciousFrame(CTkFrame):
 
     def drawTrainFrame(self):
         
-        if(self.clearFrame('Train')):
+        if(self.clearFrame('train')):
             self.left = NormalFrame(self)
             left = self.left
             left.pack(side='left', anchor='sw')
@@ -243,6 +257,25 @@ class ConsciousFrame(CTkFrame):
             right.rowconfigure(row, weight=0)
 
             self.spreadrows(row)
+
+    def set_ui_inputs(self):
+        ui_state={'use_webcam': self.webcam_active.get(),
+                'webcam_index': int(self.webcam_index.get()),
+                'delay': int(self.input_delay.get()),
+                'duration': int(self.input_duration.get()),
+                'video_path': self.video_path.get(),
+                'class_output': self.classification_output.get(),
+                'send_pose': self.send_pose_data.get(),
+                'show': self.display_input.get(),
+                'show_pose': self.display_pose.get(),
+                'osc_port': int(self.osc_port.get()),
+                'max_frequency': int(self.max_freq.get()),
+                'epochs': int(self.train_epochs.get()),
+                'target_loss': float(self.target_loss.get()),
+                'test_split': float(self.test_split.get()),
+                'cuda': self.use_cuda.get(),
+                'regularization': self.use_regularization.get()}
+        AppState.set_ui_state(ui_state)
 
     def log(self, msg):
         self.logs_frame.update(msg)

@@ -9,13 +9,11 @@ async def main():
 
     load()
 
+    AppState.load_state(path.abspath('DATA/ui_state.json'))
+
     app = App()
 
     TaskManager.register_task(asyncio.create_task(app.mainloop()))
-
-    AppState.set_app(app)
-    AppState.set_root(path.join(path.expanduser('~'), 'Documents', 'Terpsichore_Data'))
-    AppState.load(path.abspath('DATA/state.json'))
 
     try:
         await asyncio.gather(TaskManager.run_tasks())

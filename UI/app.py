@@ -7,11 +7,10 @@ from customtkinter import (CTk,
                            IntVar,
                            DoubleVar)
 from .customclasses import Button, Log
-#from .data import (DRAW_FRAME,
-#                  TABS)
 from .framedrawer import ConsciousFrame
 import asyncio
 from taskmanager import TaskManager
+from appstate import AppState
 
 class App(CTk):
 
@@ -50,7 +49,7 @@ class App(CTk):
                      self.bottom.columnconfigure(i, weight=1)
 
               self.botbar = CTkProgressBar(self.bottom, corner_radius=0, height=4)
-              self.botbar.grid(row=1, column=0, columnspan=8, sticky='nesw')
+              self.botbar.grid(row=1, column=0, columnspan=9, sticky='nesw')
               self.botbar.set(title_length)
 
               Button(master=self.bottom,
@@ -67,7 +66,7 @@ class App(CTk):
                      fct=self.body.drawMoveFrame,
                      frame=self.body,
                      bar=self.botbar,
-                     barlevel=0.635).grid(row=0, column=4, sticky='nesw')
+                     barlevel=0.59).grid(row=0, column=4, sticky='nesw')
               
               Button(master=self.bottom,
                      text='Record',
@@ -75,7 +74,7 @@ class App(CTk):
                      fct=self.body.drawTraceFrame,
                      frame=self.body,
                      bar=self.botbar,
-                     barlevel=0.775).grid(row=0, column=5, sticky='nesw')
+                     barlevel=0.72).grid(row=0, column=5, sticky='nesw')
               
               Button(master=self.bottom,
                      text='Train',
@@ -83,12 +82,17 @@ class App(CTk):
                      fct=self.body.drawTrainFrame,
                      frame=self.body,
                      bar=self.botbar,
-                     barlevel=0.89).grid(row=0, column=6, sticky='nesw')
+                     barlevel=0.82).grid(row=0, column=6, sticky='nesw')
               
               Button(master=self.bottom,
                      text='',
                      type='IMG',
-                     img='UI/Assets/settings.png').grid(row=0, column=7, sticky='nesw')
+                     img='UI/Assets/folder.png').grid(row=0, column=7, sticky='nesw')
+              
+              Button(master=self.bottom,
+                     text='',
+                     type='IMG',
+                     img='UI/Assets/settings.png').grid(row=0, column=8, sticky='nesw')
               
              
        async def mainloop(self, *args, **kwargs):
@@ -100,12 +104,13 @@ class App(CTk):
               await TaskManager.cancel_tasks()
        
        def on_closing(self):
+              AppState.save_ui_state()
               asyncio.create_task(self.cancel_all_tasks())
               self.destroy()
+
+       def set_ui_inputs(self):
+              self.body.set_ui_inputs()
             
-       def init_props(self):
-
-              self.show_video = BooleanVar(self, True)
-
-       def w_show_video(self):
-              return CTkCheckBox(self, text="Show Video", variable=self.show_video, command= lambda e: self.show_video.set(not self.show_video.get()))
+       def execute(self, command:str):
+              
+              self.set_ui_inputs()
