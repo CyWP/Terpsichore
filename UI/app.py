@@ -20,7 +20,7 @@ class App(CTk):
               self.title('')
               self.iconbitmap('UI/Assets/dance.ico')
               self.resizable(width=False, height=False)
-              self.wm_minsize(width=540, height=320)
+              self.wm_minsize(width=566, height=328)
               self.title('Load a model')
               self.columnconfigure(0, weight=1)
               self.rowconfigure(0, weight=1)
@@ -87,12 +87,14 @@ class App(CTk):
               Button(master=self.bottom,
                      text='',
                      type='IMG',
-                     img='UI/Assets/folder.png').grid(row=0, column=7, sticky='nesw')
+                     img='UI/Assets/folder.png',
+                     fct=AppState.open_folder).grid(row=0, column=7, sticky='nesw')
               
               Button(master=self.bottom,
                      text='',
                      type='IMG',
-                     img='UI/Assets/settings.png').grid(row=0, column=8, sticky='nesw')
+                     img='UI/Assets/settings.png',
+                     fct=AppState.open_github).grid(row=0, column=8, sticky='nesw')
               
              
        async def mainloop(self, *args, **kwargs):
@@ -102,14 +104,15 @@ class App(CTk):
        
        async def cancel_all_tasks(self):
               await TaskManager.cancel_tasks()
-       
-       def on_closing(self):
-              AppState.save_ui_state()
-              asyncio.create_task(self.cancel_all_tasks())
-              self.destroy()
 
        def set_ui_inputs(self):
               self.body.set_ui_inputs()
+       
+       def on_closing(self):
+              self.set_ui_inputs()
+              AppState.save_ui_state()
+              asyncio.create_task(self.cancel_all_tasks())
+              self.destroy()
             
        def execute(self, command:str):
               

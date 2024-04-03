@@ -1,12 +1,13 @@
 import json
 from os import path, makedirs, listdir
+import subprocess
+import webbrowser
 from model import Model
 class AppState:
     _state_file = None
     _state_dict = None
     _ui_input_state = None
     _models_dir = None
-    _models = {}
     _last_model = None
     _active_model = None
     _state = None
@@ -15,56 +16,100 @@ class AppState:
 
     @classmethod
     def set_root(_cls, filepath):
+        _cls._root = filepath
         if not path.exists(filepath):
             makedirs(filepath)
-        _cls.models_dir = path.join(filepath, 'Models')
-        if not path.exists(_cls.models_dir):
-            makedirs(_cls.models_dir)
+        _cls._models_dir = path.join(filepath, 'Models')
+        if not path.exists(_cls._models_dir):
+            makedirs(_cls._models_dir)
 
     @classmethod
     def load_state(_cls, filepath):
         _cls._state_file = filepath
         if not path.exists(_cls._state_file):
-            print('ho')
             _cls.default_state()
         else:
-            print('ha')
             with open(filepath, 'r') as f:
                 _cls._state_dict = json.load(f)
         _cls.set_root(_cls._state_dict['data'])
-        _cls.get_models
+        _cls.load_last_model()
 
     @classmethod
     def save_ui_state(_cls):
-        print(_cls._state_dict.values())
         with open(_cls._state_file, 'w') as f:
             json.dump(_cls._state_dict, f, indent=4)
 
     @classmethod
     def get_models(_cls):
-        for name in listdir(_cls._models_dir):
-            if path.isdir(path.join(_cls._models_dir, name)):
-                _cls._models[name] = Model(_cls.models_dir, name, new=False)
+        return [name for name in listdir(_cls._models_dir) if path.isdir(path.join(_cls._models_dir, name))]
+    
+    @classmethod 
+    def active_model_info(_cls):
+        if _cls._active_model is not None:
+            return _cls._active_model.get_info()
+        else:
+            return None
 
     @classmethod
     def load_model(_cls, name:str):
-        pass
+        if name in _cls.get_models():
+            _cls._active_model = Model(_cls._models_dir, name, new=False)
+            _cls._state_dict['active_model'] = name
+
+    @classmethod
+    def load_last_model(_cls):
+        if _cls.get_attr('active_model') in _cls.get_models():
+            _cls.load_model(_cls.get_attr('active_model'))
     
     @classmethod
     def save_model(_cls):
-        pass
+        _cls._active_model.save()
 
     @classmethod
     def save_model_as(_cls, name:str):
-        pass
+        if name not in _cls._models.keys():
+            _cls._active_model.save_as(name)
 
     @classmethod
     def new_model(_cls, name:str):
-        pass
+        if name not in _cls.get_models():
+            _cls._active_model = Model(_cls._models_dir, name, new=True)
+        else:
+            _cls.load_model(name)
 
     @classmethod
-    def update_ui_inputs(_cls):
-        _cls.get_ui_inputs()
+    def new_gesture(_cls, name:str):
+        if _cls._active_model is not None:
+            _cls._active_model.add_gesture(name)
+
+    @classmethod
+    def remove_gesture(_cls, name:str):
+        if _cls._active_model is not None:
+            _cls._active_model.remove_gesture(name)
+
+    @classmethod
+    def select_gesture(_cls, name:str):
+        if _cls._active_model is not None:
+            if(_cls._active_model.select_gesture(name)):
+                _cls._state_dict['active_gesture'] = name
+
+    @classmethod
+    def get_gestures(_cls):
+        try:
+            ret = _cls._active_model.get_gestures()
+        except:
+            ret = []
+        return ret
+    
+    @classmethod
+    def get_active_gesture(_cls):
+        if _cls._active_model is not None:
+            return _cls._active_model.active_gesture
+        return ''
+
+    @classmethod
+    def set_ui_state(_cls, dict):
+        _cls._state_dict.update(dict)
 
     @classmethod
     def update_state(_cls, state: dict):
@@ -76,6 +121,25 @@ class AppState:
             return _cls._state_dict[attr]
         except:
             print(f'Attribute {attr} is invalid.')
+
+    @classmethod
+    def open_folder(_cls):
+        try:
+            subprocess.Popen(f'explorer "{_cls._root}"')
+        except:
+            pass
+        try:
+            subprocess.Popen(["open", _cls._root])
+        except:
+            pass
+        try:
+            subprocess.Popen(["xdg-open", _cls._root])
+        except:
+            pass
+
+    @classmethod
+    def open_github(_cls):
+        webbrowser.open_new('https://github.com/CyWP/Terpsichore')
 
     @classmethod
     def default_state(_cls):
@@ -93,9 +157,9 @@ class AppState:
                     'max_frequency': 0,
                     'epochs': 50,
                     'target_loss': 0.,
-                    'test_split': 0.15,
+                    'test_split': 15.0,
                     'cuda': True,
                     'regularization': True,
-                    'data': path.join(path.expanduser('~'), 'Documents', 'Terpsichore_Data'),
+                    'data': path.join(path.expanduser('~'), '.terpsichore'),
                     'active_model': ''
                     }

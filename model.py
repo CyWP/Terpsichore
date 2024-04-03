@@ -11,31 +11,51 @@ class Model():
         self.gestures = {}
         self.root = dirpath
         self.path = path.join(dirpath, name)
+        self.model_path = path.join(self.path, 'model.ckpt')
+        self.name = name
+        self.active_gesture = None
         if new or not path.exists(self.path):
             self.create()
         else:
             self.load()
 
     def load(self):
-        with open(path.join(self.path, 'info.json'), 'r') as f:
-            self.info = json.load(f)
+        try:
+            with open(path.join(self.path, 'info.json'), 'r') as f:
+                self.info = json.load(f)
+        except:
+            self.info = Model.default_info()
         for gesture in listdir(self.path):
-            if path.isfile(path.join(self.path, gesture)):
-                self.gestures[gesture] = Gesture(gesture, new=False)
+            if path.isdir(path.join(self.path, gesture)):
+                self.gestures[gesture] = Gesture(path.join(self.path, gesture), new=False)
 
     def create(self):
         self.info = Model.default_info()
-        mkdir(self.path)
+        try:
+            mkdir(self.path)
+        except:
+            pass
 
     def add_gesture(self, name):
         if not path.exists(path.join(self.path, name)):
-            self.gestures[name] = Gesture(name)
+            self.gestures[name] = Gesture(path.join(self.path, name), new=True)
 
     def remove_gesture(self, name):
         try:
+            self.gestures[name].erase_all()
             self.gestures.pop(name)
         except:
             pass
+
+    def select_gesture(self, name):
+        if name in self.gestures.keys():
+            self.active_gesture = name
+
+    def get_gestures(self):
+        return [(name, str(gesture.recs), f'{gesture.space/1000}kB') for name, gesture in self.gestures.items()]
+    
+    def gesture_space(self):
+        return f'{sum([gesture.space for name, gesture in self.gestures.items()])/1000}kB'
     
     @classmethod
     def default_info(_cls):
@@ -47,24 +67,35 @@ class Model():
 
     def save_as(self, name):
         self.path = path.join(self.root, name)
+        mkdir(self.path)
         for gesture in self.gestures:
             gesture = copy.deepcopy(gesture)
             gesture.rebase(path.join(self.path, gesture))
         self.save()
+
+    def has_trained_model(self):
+        return path.exists(self.model_path)
+
+    def get_info(self):
+        return [('Name', self.name),
+                ('Gestures', len(self.gestures.keys())),
+                ('Space', self.gesture_space()),
+                ('Is trained', self.has_trained_model())]
 
 class Gesture():
 
     def __init__(self, dirpath, new:bool):
         self.path = dirpath
         self.last_rec = None
-        if new or path.exists(self.path):
+        self.space = 0
+        self.recs = 0
+        if new or not path.exists(self.path):
             self.create()
         else:
             self.load()
 
     def create(self):
-        self.space = 0
-        self.recs = 0            
+        mkdir(self.path)           
 
     def load(self):
         for file in listdir(self.path):
@@ -79,10 +110,16 @@ class Gesture():
     def delete_last_rec(self):
         if self.last_rec is not None:
             try:
-                remove(self.last_rec)
+                shutil.rmtree(self.last_rec)
             except:
                 pass
             self.last_rec = None
+
+    def erase_all(self):
+        try:
+            shutil.rmtree(self.path)
+        except:
+            pass
 
     def rebase(self, newpath):
         for file in listdir(self.path):

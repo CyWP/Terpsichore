@@ -16,12 +16,12 @@ from .Assets import (BUTTON_TYPES,
                      THEME,
                      FONTS,
                      getRandomHoverColor)
-
+from appstate import AppState
 
 def hex_to_rgb(value):
     return tuple([int(255*x) for x in colors.hex2color(value)])
 
-def colorize(filename, color):
+def colorize(filename, color, size=None):
     color = color[get_appearance_mode=='dark']
     replacement_color = hex_to_rgb(color)
     img = Image.open(filename)
@@ -30,7 +30,26 @@ def colorize(filename, color):
     g = g.point(lambda i: replacement_color[1])
     b = b.point(lambda i: replacement_color[2])
     img = Image.merge('RGBA', (r, g, b, a))
-    return CTkImage(light_image=img, dark_image=img)
+    img = CTkImage(light_image=img, dark_image=img)
+    if size is not None:
+        img.configure(size=size)
+    return img
+
+class ColImage(CTkLabel):
+
+    def __init__(self, master, path, size:tuple, color):
+
+        self.path = path
+        self.size=size
+        img = colorize(path, color)
+        img.configure(size=size)
+        super().__init__(master, image=img, text='')
+
+        self.bind('<Enter>', lambda event: self.color(getRandomHoverColor()))
+        self.bind('<Leave>', lambda event: self.color(color))
+
+    def color(self, color):
+        self.configure(image = colorize(self.path, color, self.size))
 class Button(CTkButton):
 
     def click(self, color):
@@ -184,26 +203,50 @@ class ClassTable(CTkScrollableFrame):
      
     def __init__(self, args, **kwargs):
           
-        super().__init__(args, corner_radius=1, border_width=1, width=0, height=0, **kwargs)
-        self._scrollbar._set_dimensions(width=10, height=172)
-
-        for i in range(3):
+        super().__init__(args, corner_radius=1, border_width=1, width=160, height=132, **kwargs)
+        self._scrollbar._set_dimensions(width=10, height=20)
+        for i in range(5):
             self.columnconfigure(i, weight=1)
 
-        Label(self, text='Gesture').grid(row=0, column=0, sticky='w')
-        Label(self, text='Samples').grid(row=0, column=1, sticky='')
-        Button(self, type='ACTION', text='New Gesture').grid(row=0, column=2, sticky='e')
+        self.draw()
 
-        self.update()
+    def draw(self):
+        
+        for widget in self.winfo_children():
+             widget.destroy()
 
-    def update(self):
-        pass
+        Label(self, text='Gesture').grid(row=0, column=1, sticky='w')
+        Label(self, text='Samples').grid(row=0, column=2, sticky='w')
+        Label(self, text='Size').grid(row=0, column=3, sticky='w')
 
+        i=1
+        for name, recs, space in AppState.get_gestures():
+            if name == AppState.get_active_gesture():
+                Label(self, text='>>>').grid(row=i, column=0, sticky='w')
+            else:
+                Button(self, type='ACTION', text='Select', fct=lambda n=name:self.select_gesture(n)).grid(row=i, column=0, sticky='w')
+            Label(self, text=name).grid(row=i, column=1, sticky='w')
+            Label(self, text=recs).grid(row=i, column=2, sticky='w')
+            Label(self, text=space).grid(row=i, column=3, sticky='w')
+            Button(self, type='ACTION', text='Delete', fct=lambda n=name:self.remove_gesture(n)).grid(row=i, column=4, sticky='e')
+            i+=1
+
+    def remove_gesture(self, name):
+         AppState.remove_gesture(name)
+         self.draw()
+
+    def add_gesture(self, name):
+         AppState.new_gesture(name)
+         self.draw()
+
+    def select_gesture(self, name):
+        AppState.select_gesture(name)
+        self.draw()
 class LogFrame(CTkScrollableFrame):
      
     def __init__(self, args, **kwargs):
           
-        super().__init__(args, corner_radius=1, border_width=1, width=180, height=132, **kwargs)
+        super().__init__(args, corner_radius=1, border_width=1, width=160, height=132, **kwargs)
         self._scrollbar._set_dimensions(width=10, height=120)
         Label(self, text='Training Logs').pack(anchor='w', side='top')
 
@@ -214,6 +257,31 @@ class LogFrame(CTkScrollableFrame):
          for child in self.winfo_children[1:]:
               child.destroy()
 
+class LoadModelFrame(CTkScrollableFrame):
+
+    def __init__(self, args, refresh=None, **kwargs):
+        super().__init__(args, corner_radius=1, border_width=1, width=120, height=132, **kwargs)
+        self._scrollbar._set_dimensions(width=10, height=240)
+        self.refresh=refresh
+        self.draw()
+
+    def draw(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+        Label(self, text='Load Model').pack(side='top', fill='x')
+        for i, model in enumerate(AppState.get_models()):
+            Button(self, type='ACTION', text=model, fct=lambda n=model: self.load_model(n)).pack(side='top', fill='x', pady=2, padx=2)
+
+    def grid(self, **kwargs):
+         self.draw()
+         super().grid(**kwargs)
+
+    def load_model(self, name):
+        self.draw()
+        AppState.load_model(name)
+        if self.refresh is not None:
+            self.refresh()
+    
 class Slider(CTkSlider):
      
     def __init__(self, args, **kwargs):

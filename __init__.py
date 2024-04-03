@@ -9,7 +9,7 @@ async def main():
 
     load()
 
-    AppState.load_state(path.abspath('DATA/ui_state.json'))
+    AppState.load_state(path.abspath('DATA/state.json'))
 
     app = App()
 
@@ -17,10 +17,8 @@ async def main():
 
     try:
         await asyncio.gather(TaskManager.run_tasks())
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, asyncio.exceptions.CancelledError) as e:
         pass
-    finally:
-        await TaskManager.cancel_tasks()
 
 if __name__ == "__main__":
     asyncio.run(main())

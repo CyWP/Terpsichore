@@ -13,7 +13,6 @@ class TaskManager:
 
     @classmethod
     async def cancel_tasks(cls):
-        print('cancel')
         for task in cls._tasks:
             task.cancel()
             try:
