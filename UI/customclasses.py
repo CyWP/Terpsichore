@@ -53,9 +53,9 @@ class ColImage(CTkLabel):
 class Button(CTkButton):
 
     def click(self, color):
-         self.fct()
-         self.colorButton(color)
-         if self.bar is not None:             
+        self.fct()
+        self.colorButton(color)
+        if self.bar is not None:             
             self.bar.configure(progress_color=color)
             self.bar.set(self.barlevel)
 
@@ -69,7 +69,7 @@ class Button(CTkButton):
     def __init__(self,
                  master,
                  type,
-                 fct= lambda e: None,
+                 fct= lambda: None,
                  frame=None,
                  img=None,
                  bar=None,
@@ -195,9 +195,12 @@ class RadioButton(CTkRadioButton):
 
 class Entry(CTkEntry):
      
-     def __init__(self, args, width=36, **kwargs):
+    def __init__(self, args, width=36, **kwargs):
           
-          super().__init__(args, height=18, width=width, font=FONTS['tab']['info'], **kwargs)
+          super().__init__(args, height=20, width=width, font=FONTS['tab']['info'], **kwargs)
+
+    def clear(self):
+        self.delete(0, (len(self.get())))
 
 class ClassTable(CTkScrollableFrame):
      
@@ -224,11 +227,11 @@ class ClassTable(CTkScrollableFrame):
             if name == AppState.get_active_gesture():
                 Label(self, text='>>>').grid(row=i, column=0, sticky='w')
             else:
-                Button(self, type='ACTION', text='Select', fct=lambda n=name:self.select_gesture(n)).grid(row=i, column=0, sticky='w')
+                Button(self, type='ACTION', text='Select', command=lambda n=name:self.select_gesture(n)).grid(row=i, column=0, sticky='w')
             Label(self, text=name).grid(row=i, column=1, sticky='w')
             Label(self, text=recs).grid(row=i, column=2, sticky='w')
             Label(self, text=space).grid(row=i, column=3, sticky='w')
-            Button(self, type='ACTION', text='Delete', fct=lambda n=name:self.remove_gesture(n)).grid(row=i, column=4, sticky='e')
+            Button(self, type='ACTION', text='Delete', command=lambda n=name:self.remove_gesture(n)).grid(row=i, column=4, sticky='e')
             i+=1
 
     def remove_gesture(self, name):
@@ -257,6 +260,32 @@ class LogFrame(CTkScrollableFrame):
          for child in self.winfo_children[1:]:
               child.destroy()
 
+class ModelInfoFrame(CTkScrollableFrame):
+
+    def __init__(self, args, **kwargs):
+        super().__init__(args, corner_radius=1, border_width=1, width=240, height=132, **kwargs)
+        self._scrollbar._set_dimensions(width=10, height=149)
+        self.draw()
+
+    def draw(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+        info = AppState.active_model_info()
+        row=0
+        self.columnconfigure(index=(0, 1), weight=1)
+        if info is None:
+            Label(self, text='Load or Create a model').grid(row=row, column=0, columnspan=2, sticky='w')
+        else:
+            Label(self, text='Current Model').grid(row=row, column=0, columnspan=2, sticky='w')
+            row += 1
+            for name, val in info:
+                Label(self, text=name).grid(row=row, column=0, sticky='w')
+                Label(self, text=val).grid(row=row, column=1, sticky='e')
+                row += 1
+
+    def grid(self, **kwargs):
+         self.draw()
+         super().grid(**kwargs)
 class LoadModelFrame(CTkScrollableFrame):
 
     def __init__(self, args, refresh=None, **kwargs):
@@ -268,9 +297,10 @@ class LoadModelFrame(CTkScrollableFrame):
     def draw(self):
         for widget in self.winfo_children():
             widget.destroy()
+        
         Label(self, text='Load Model').pack(side='top', fill='x')
         for i, model in enumerate(AppState.get_models()):
-            Button(self, type='ACTION', text=model, fct=lambda n=model: self.load_model(n)).pack(side='top', fill='x', pady=2, padx=2)
+            Button(self, type='ACTION', text=model, command=lambda n=model: self.load_model(n)).pack(side='top', fill='x', pady=2, padx=2)
 
     def grid(self, **kwargs):
          self.draw()

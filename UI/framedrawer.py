@@ -15,6 +15,7 @@ from .customclasses import (Button,
                             Slider,
                             LogFrame,
                             LoadModelFrame,
+                            ModelInfoFrame,
                             ColImage)
 from appstate import AppState
 
@@ -49,7 +50,8 @@ class ConsciousFrame(CTkFrame):
 
         self.input_settings_frame = NormalFrame(self.right)
         self.class_table = ClassTable(self.right)
-        self.load_model_frame = LoadModelFrame(self.right, refresh=None)
+        self.load_model_frame = LoadModelFrame(self.right, refresh=self.redrawHome)
+        self.model_info_frame = ModelInfoFrame(self.right)
 
         self.input_delay_entry = Entry(self.input_settings_frame, width=36, textvariable=self.input_delay)
         self.input_duration_entry = Entry(self.input_settings_frame, width=36, textvariable=self.input_duration)
@@ -68,10 +70,13 @@ class ConsciousFrame(CTkFrame):
         self.test_split_label = Label(self.right, text=AppState.get_attr('test_split'))
         self.new_gesture_entry = Entry(self.right, width=0, placeholder_text='')
         self.new_model_entry = Entry(self.right, width=0, placeholder_text='')
-        self.new_model_button = Button(self.right, type='ACTION', text='New Model', fct=self.new_model)
+        self.new_model_button = Button(self.right, type='ACTION', text='New Model', command=self.new_model)
+        self.delete_model_button = Button(self.right, type='ACTION', text='Delete', command=self.delete_model)
+        self.copy_model_button = Button(self.right, type='ACTION', text='Copy Active', command=self.copy_model)
+        self.restore_deleted_button = Button(self.right, type='ACTION', text='Restore', command=self.restore_deleted)
 
-        self.new_gesture_button = Button(self.right, text='Add Gesture', type='ACTION', fct=self.add_gesture)
-        self.video_path_button = Button(self.input_settings_frame, text=self.formatted_video_path(), type='ACTION', fct=self.browse_video_path)
+        self.new_gesture_button = Button(self.right, text='Add Gesture', type='ACTION', command=self.add_gesture)
+        self.video_path_button = Button(self.input_settings_frame, text=self.formatted_video_path(), type='ACTION', command=self.browse_video_path)
         self.webcam_rb = RadioButton(self.right, text='Webcam', command=self.set_input_webcam)
         self.video_rb = RadioButton(self.right, text='Video', command=self.set_input_video)
         self.test_split_slider = Slider(self.right, from_=0, to=100, number_of_steps=400, command=self.test_split_callback, variable=self.test_split)
@@ -136,37 +141,40 @@ class ConsciousFrame(CTkFrame):
             self.webcam_index_entry.grid(row=0, column=5, sticky='w')
         try:
             self.video_path_button.destroy()
-            self.video_path_button = Button(self.input_settings_frame, text=self.formatted_video_path(), type='ACTION', fct=self.browse_video_path)
+            self.video_path_button = Button(self.input_settings_frame, text=self.formatted_video_path(), type='ACTION', command=self.browse_video_path)
         except:
             pass
 
     def test_split_callback(self, value):
         self.test_split_label.configure(text=f'{value}%')
 
+    def redrawHome(self):
+        self.state=''
+        self.drawHomeFrame()
+
     def drawHomeFrame(self):
 
         if(self.clearFrame('home')):
-            row = 0
+            
+            self.title()
+            self.new_model_entry.clear()
+
             left = self.left
             right = self.right
-            self.home_img.pack(side='top', anchor ='n', fill='y')
+            self.home_img.pack(side='top', anchor ='nw', fill='y')
 
-            self.new_model_entry.grid(row=0, column=0, columnspan=2, sticky='nesw', pady=8)
-            self.new_model_button.grid(row=1, column=0, columnspan=2, sticky='nesw')
-            Label(right, text=' ').grid(row=6, column=2)
-            self.load_model_frame.grid(column=3, columnspan=1, row=0, rowspan=7, sticky='new', pady=8)
-            Label(right, text='Current Model').grid(row=2, column=0, columnspan=2, sticky='w')
-            i=3
-            info = AppState.active_model_info()
-            if info is None:
-                Label(right, 'Create or Load a model').grid(row=i, column=0, columnspan=2)
-            else:
-                for name, val in info:
-                    Label(right, text=name).grid(row=i, column=0, sticky='w')
-                    Label(right, text=val).grid(row=i, column=1, sticky='w')
-                    i+=1
+            self.new_model_entry.grid(row=0, column=0, columnspan=2, sticky='ew', pady=8)
+            self.new_model_button.grid(row=1, column=0, columnspan=1, sticky='ew', padx=(0, 4))
 
-            self.spreadrows(7)
+            self.copy_model_button.grid(row=1, column=1, columnspan=1, sticky='ew', padx=(4, 0))
+            
+            self.load_model_frame.grid(column=3, columnspan=1, row=0, rowspan=7, sticky='new', pady=8, padx=8)
+            
+            self.model_info_frame.grid(row=2, rowspan=4, column=0, columnspan=2, sticky='nesw', pady=8)
+
+            self.delete_model_button.grid(row=6, column=0, columnspan=1, sticky='ew', padx=(0, 4))
+            self.restore_deleted_button.grid(row=6, column=1, columnspan=1, sticky='ew', padx=(4, 0))
+            self.spreadrows(9)
 
     def drawMoveFrame(self):
         
@@ -247,7 +255,7 @@ class ConsciousFrame(CTkFrame):
             row+=1
 
             Label(right, text='Name').grid(row=row, column=0, columnspan=1, sticky='w')
-            self.new_gesture_entry.grid(row=row, column=1, columnspan=2, sticky='ew', padx=3)
+            self.new_gesture_entry.grid(row=row, column=1, columnspan=2, sticky='ew', padx=8)
             self.new_gesture_button.grid(row=row, column=3, sticky='ew')
             row+=1
 
@@ -328,9 +336,30 @@ class ConsciousFrame(CTkFrame):
 
     def add_gesture(self):
         self.class_table.add_gesture(self.new_gesture_entry.get())
+        self.new_gesture_entry.clear()
 
     def new_model(self):
-        pass
+        AppState.new_model(self.new_model_entry.get())
+        self.redrawHome()
+
+    def delete_model(self):
+        AppState.delete_model()
+        self.redrawHome()
+
+    def copy_model(self):
+        AppState.copy_model(self.new_model_entry.get())
+        self.redrawHome()
+
+    def restore_deleted(self):
+        AppState.restore_deleted()
+        self.redrawHome()
+
+    def title(self):
+        title = AppState.get_attr('active_model')
+        if title is None:
+            self.master.title('Load or create a model')
+        else:
+            self.master.title(title)
 
     def log(self, msg):
         self.logs_frame.update(msg)

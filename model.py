@@ -80,7 +80,7 @@ class Model():
         return [('Name', self.name),
                 ('Gestures', len(self.gestures.keys())),
                 ('Space', self.gesture_space()),
-                ('Is trained', self.has_trained_model())]
+                ('Is trained', str(self.has_trained_model()))]
 
 class Gesture():
 

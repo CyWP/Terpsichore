@@ -17,11 +17,9 @@ class App(CTk):
        def __init__(self):
               super().__init__()
               
-              self.title('')
               self.iconbitmap('UI/Assets/dance.ico')
               self.resizable(width=False, height=False)
               self.wm_minsize(width=566, height=328)
-              self.title('Load a model')
               self.columnconfigure(0, weight=1)
               self.rowconfigure(0, weight=1)
               self.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -110,7 +108,7 @@ class App(CTk):
        
        def on_closing(self):
               self.set_ui_inputs()
-              AppState.save_ui_state()
+              AppState.close()
               asyncio.create_task(self.cancel_all_tasks())
               self.destroy()
             

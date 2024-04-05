@@ -2,13 +2,13 @@ import json
 from os import path, makedirs, listdir
 import subprocess
 import webbrowser
+import shutil
 from model import Model
 class AppState:
     _state_file = None
     _state_dict = None
     _ui_input_state = None
     _models_dir = None
-    _last_model = None
     _active_model = None
     _state = None
 
@@ -22,6 +22,9 @@ class AppState:
         _cls._models_dir = path.join(filepath, 'Models')
         if not path.exists(_cls._models_dir):
             makedirs(_cls._models_dir)
+        _cls._del_dir = path.join(filepath, 'Deleted')
+        if not path.exists(_cls._del_dir):
+            makedirs(_cls._del_dir)
 
     @classmethod
     def load_state(_cls, filepath):
@@ -35,9 +38,18 @@ class AppState:
         _cls.load_last_model()
 
     @classmethod
+    def close(_cls):
+        _cls.save_ui_state()
+        _cls.clear_deleted()
+
+    @classmethod
     def save_ui_state(_cls):
         with open(_cls._state_file, 'w') as f:
             json.dump(_cls._state_dict, f, indent=4)
+
+    @classmethod
+    def clear_deleted(_cls):
+        shutil.rmtree(_cls._del_dir)
 
     @classmethod
     def get_models(_cls):
@@ -58,8 +70,10 @@ class AppState:
 
     @classmethod
     def load_last_model(_cls):
-        if _cls.get_attr('active_model') in _cls.get_models():
-            _cls.load_model(_cls.get_attr('active_model'))
+        if _cls._state_dict['active_model'] in _cls.get_models():
+            _cls.load_model(_cls._state_dict['active_model'])
+        else:
+            _cls._state_dict['active_model'] = None
     
     @classmethod
     def save_model(_cls):
@@ -74,7 +88,35 @@ class AppState:
     def new_model(_cls, name:str):
         if name not in _cls.get_models():
             _cls._active_model = Model(_cls._models_dir, name, new=True)
+            _cls._state_dict['active_model'] = name
         else:
+            _cls.load_model(name)
+
+    @classmethod
+    def delete_model(_cls, name=None):
+  
+        if name in _cls.get_models():
+            _cls.load_model(name)
+        model = _cls._active_model   
+        shutil.move(model.path, path.join(_cls._del_dir, _cls._state_dict['active_model']))
+        if len(_cls.get_models())>0:
+            _cls.load_model(_cls.get_models()[-1])
+        else:
+            _cls._active_model = None
+            _cls._state_dict['active_model'] = None
+
+    @classmethod
+    def restore_deleted(_cls):
+        dirs = listdir(_cls._del_dir)
+        if len(dirs)>0:
+            for dir in dirs:
+                shutil.move(path.join(_cls._del_dir, dir), path.join(_cls._models_dir, dir))
+            _cls.load_model(dirs[-1])
+
+    @classmethod
+    def copy_model(_cls, name):
+        if None not in (_cls._active_model, _cls._state_dict['active_model']) and name != '': 
+            shutil.copytree(_cls._active_model.path, path.join(_cls._models_dir, name))
             _cls.load_model(name)
 
     @classmethod
