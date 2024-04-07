@@ -1,36 +1,102 @@
-from abc import ABC, abstractmethod
+from appstate import AppState
+import csv
+from pythonosc.udp_client import SimpleUDPClient
+from .tasks import Tasks
 
-class Dispatcher(ABC):
-    
-    def __init__(self):
-        pass
-    
-    @abstractmethod
-    def dispatch(self):
+class Dispatcher:
+    """
+    Base class for dispatchers.
+    """
+
+    def dispatch(self, data):
+        """
+        Dispatches data.
+        
+        Args:
+            data: Data to be dispatched.
+        """
         pass
 
-    @abstractmethod
     def close(self):
+        """
+        Closes the dispatcher.
+        """
         pass
 
 class CSVWriter(Dispatcher):
+    """
+    Dispatcher for writing data to a CSV file.
+    """
 
-    def __init__(self, filename:str):
-        pass
+    def __init__(self):
+        """
+        Initializes the CSVWriter dispatcher.
+        """
+        self.data = []
+        self.outfile = AppState.get_csv_file()
 
-    def dispatch(self):
-        pass
+    def dispatch(self, data):
+        """
+        Dispatches data by appending it to the internal data list.
+        
+        Args:
+            data: Data to be dispatched.
+        """
+        self.data.append(data)
 
     def close(self):
-        pass
+        """
+        Closes the CSVWriter by writing the internal data to a CSV file.
+        """
+        with open(self.outfile, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerows(self.data)
 
 class OSCClient(Dispatcher):
+    """
+    Dispatcher for sending data over OSC (Open Sound Control) protocol.
+    """
 
-    def __init__(self, osc):
-        pass
+    def __init__(self):
+        """
+        Initializes the OSCClient dispatcher.
+        """
+        ip = AppState.get_attr('osc_ip')
+        port = AppState.get_attr('osc_port')
+        self.address = AppState.get_attr('osc_address')
+        self.client = SimpleUDPClient(ip, port)
 
-    def dispatch(self):
-        pass
+    def dispatch(self, data):
+        """
+        Dispatches data by sending it over OSC.
+        
+        Args:
+            data: Data to be dispatched.
+        """
+        self.client.send_message(address=self.address, value=data)
 
     def close(self):
-        pass
+        """
+        Closes the OSCClient dispatcher by sending a completion message.
+        """
+        self.client.send_message(address='/done', value=True)
+
+def get_dispatcher(task: str):
+    """
+    Factory function to get the appropriate dispatcher based on the task.
+    
+    Args:
+        task (str): Task type, either 'perform' or 'record'.
+    
+    Returns:
+        Dispatcher: An instance of the appropriate dispatcher.
+    
+    Raises:
+        ValueError: If the task type is invalid.
+    """
+    if task == Tasks.PERFORM:
+        return OSCClient()
+    elif task == Tasks.RECORD:
+        return CSVWriter()
+    else:
+        raise ValueError(f'Invalid task type: {task}')

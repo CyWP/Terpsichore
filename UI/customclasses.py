@@ -111,9 +111,9 @@ class NormalFrame(CTkFrame):
 
 class Label(CTkLabel):
 
-    def __init__(self, args, **kwargs):
+    def __init__(self, args, anchor='w', **kwargs):
 
-        super().__init__(args, font=FONTS['p']['info'], **kwargs)
+        super().__init__(args, font=FONTS['p']['info'], height=24, anchor=anchor, **kwargs)
 
     def grid(self, **kwargs):
 
@@ -206,7 +206,7 @@ class ClassTable(CTkScrollableFrame):
      
     def __init__(self, args, **kwargs):
           
-        super().__init__(args, corner_radius=1, border_width=1, width=160, height=132, **kwargs)
+        super().__init__(args, corner_radius=1, border_width=1, width=160, height=120, **kwargs)
         self._scrollbar._set_dimensions(width=10, height=20)
         for i in range(5):
             self.columnconfigure(i, weight=1)
@@ -264,7 +264,7 @@ class ModelInfoFrame(CTkScrollableFrame):
 
     def __init__(self, args, **kwargs):
         super().__init__(args, corner_radius=1, border_width=1, width=240, height=132, **kwargs)
-        self._scrollbar._set_dimensions(width=10, height=149)
+        self._scrollbar._set_dimensions(width=10, height=152)
         self.draw()
 
     def draw(self):
@@ -274,9 +274,9 @@ class ModelInfoFrame(CTkScrollableFrame):
         row=0
         self.columnconfigure(index=(0, 1), weight=1)
         if info is None:
-            Label(self, text='Load or Create a model').grid(row=row, column=0, columnspan=2, sticky='w')
+            Label(self, text='Load or Create a model', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
         else:
-            Label(self, text='Current Model').grid(row=row, column=0, columnspan=2, sticky='w')
+            Label(self, text='Current Model', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
             row += 1
             for name, val in info:
                 Label(self, text=name).grid(row=row, column=0, sticky='w')
@@ -298,7 +298,7 @@ class LoadModelFrame(CTkScrollableFrame):
         for widget in self.winfo_children():
             widget.destroy()
         
-        Label(self, text='Load Model').pack(side='top', fill='x')
+        Label(self, text='Load Model', anchor='center').pack(side='top', fill='x')
         for i, model in enumerate(AppState.get_models()):
             Button(self, type='ACTION', text=model, command=lambda n=model: self.load_model(n)).pack(side='top', fill='x', pady=2, padx=2)
 

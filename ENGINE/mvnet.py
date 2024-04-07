@@ -1,15 +1,11 @@
-import tensorflow as tf
-import numpy as np
 import cv2
-import time
-from dispatcher import Dispatcher, CSVWriter, OSCClient
-from ..appstate import AppState
-from math import dist
-from .timer import Timer
+from enum import Enum
+from screeninfo import get_monitors
+from os import path
 
-class Engine():
+class MoveNet(Enum):
 
-    _edges = {
+        EDGES = {
         (0, 1, (0, 255, 0)): 'm',
         (0, 2, (0, 0, 255)): 'c',
         (1, 3, (0, 0, 255)): 'm',
@@ -30,7 +26,7 @@ class Engine():
         (14, 16, (125, 0, 125)): 'c' #right tibia
         }
     
-    _keypoints = {
+        KEYPOINTS = {
         'nose': 0,
         'left_eye': 1,
         'right_eye': 2,
@@ -49,76 +45,37 @@ class Engine():
         'left_ankle': 15,
         'right_ankle': 16}
 
-    
-    _momentum = 0.2 
-    
-    _confidence = 0.2 #confidence threshold for value to be deemed valid
-    
-    _frames = 0 #keeps track of frames
+        MODELPATH = path.abspath('DATA/mvnet.tflite')
 
-    _tf_model_path = "" #implement later
+        INPUT_SIZE = 34
 
-    @classmethod
-    def launch(_cls, task:str):
-    #Load Model
-        interpreter = tf.lite.Interpreter(model_path=_cls._tf_model_path)
-        interpreter.allocate_tensors()
+        MOMENTUM = 0.5
 
-        #init necessary variables
-        dispatcher = select_dispatcher(task)
-        use_webcam = AppState.get_attr('use_webcam')
-        show = AppState.get_attr('show')
-        delay = AppState.get_attr('delay')
+        CONFIDENCE_THRESHOLD = 0.5
 
-        #Set Input device
-        if use_webcam:
-            try:
-                cap = cv2.VideoCapture(AppState.get_attr('webcam_index'))
-            except:
-                cap = cv2.VideoCapture(0) #Switch to default webcam if specified index not working
-        else:
-            cap = cv2.VideoCapture(AppState.get_attr('video_path'))
+        FONT = cv2.FONT_HERSHEY_SIMPLEX
 
-        countdown(delay=delay,
-                  video_capture=cap,
-                  use_webcam=use_webcam) #Delays start of video input
+        FONT_COLOR = (255, 255, 0)
 
-        while cap.isOpened():
+        FONT_SCALE = 3
 
-            ret, frame = cap.read()
-            if frame is None:
-                break
-            # Reshape image
-            img = frame.copy()
-            img = tf.image.resize_with_pad(np.expand_dims(img, axis=0), 192,192)
-            input_image = tf.cast(img, dtype=tf.float32)
-            # Setup input and output 
-            input_details = interpreter.get_input_details()
-            output_details = interpreter.get_output_details()
-            # Make predictions 
-            interpreter.set_tensor(input_details[0]['index'], np.array(input_image))
-            interpreter.invoke()
-            keypoints_with_scores = interpreter.get_tensor(output_details[0]['index'])
-            #Send to wekinator
-            pose = format_tensor(keypoints_with_scores)
-            direction = pose_to_vector(keypoints_with_scores)
-            #blendclient.send_message("/vector", extract_direction(out))
-            blendclient.send_message("/vec", direction)
-            wekclient.send_message("/wek/inputs", pose)
-            frames += 1
-            # Rendering 
-            if show:
-                draw_connections(frame, keypoints_with_scores, EDGES, CONFIDENCE)
-                draw_keypoints(frame, keypoints_with_scores, CONFIDENCE)
-                cv2.imshow('Press q to quit', frame)
-            #Press q to exit
-            if cv2.waitKey(10) & 0xFF==ord('q') or (webcam and time.time()-start>=duration):
-                break
-        endclient.send_message("/end", 1)           
-        cap.release()
-        cv2.destroyAllWindows()
+        FONT_LOCATION = (50, 100)
 
-    def draw_keypoints(frame, keypoints, confidence_threshold):
+        INFERENCE_X = 192
+
+        INFERENCE_Y = 192
+
+        EXIT_KEY = 'q'
+
+        WINDOW_NAME = f'Terpsichore: press {EXIT_KEY} to Exit'
+
+        TEMPORAL_AXIS_SIZE = 17
+
+        SCREEN_X = get_monitors()[0].width
+
+        SCREEN_Y = get_monitors()[0].height
+
+        '''def draw_keypoints(frame, keypoints, confidence_threshold):
         y, x, c = frame.shape
         shaped = np.squeeze(np.multiply(keypoints, [y,x,1]))       
         for kp in shaped:
@@ -139,12 +96,6 @@ class Engine():
                 cv2.line(frame, (int(x1), int(y1)), (int(x2), int(y2)), col, 2)
 
 
-def select_dispatcher(task:str, props:dict):
-    
-    if task=='move':
-        return OSCClient(props['osc_port'])
-    if task=='record':
-        return CSVWriter() #TODO: create csv path generator
 #Just returns a flat array of 34 floats
 def format_tensor(keypoints):
     return np.asarray(np.delete(keypoints[0], np.s_[::3], None), dtype=float)
@@ -205,15 +156,18 @@ def display_text(frame, remaining_time):
 
 def countdown(delay: int, video_capture: cv2.VideoCapture, use_webcam:bool):
 
-    ti = Timer.add_timer(delay)
+    if delay <= 0:
+        return
+    
+    ti = Timer.add_timer(delay, action='pop')
     ret, frame = video_capture.read()
     
     while not Timer.is_done(ti, pop=True):
-        if use_webcam: #We do not want the delay timer to be running the video
+        if use_webcam: #We do not want the delay timer to be running the video, just pause at the first frame
             ret, frame = video_capture.read()
         remaining_time = max(0, delay - time.time() + Timer.starts[0])
         frame = display_text(frame, remaining_time)
         cv2.imshow('Press q to quit', frame)
         if cv2.waitKey(10) & 0xFF == ord('q'):
-            return
+            return'''
         

@@ -2,6 +2,7 @@ import asyncio
 
 class TaskManager:
     _tasks = []
+    _app = None
 
     @classmethod
     def register_task(cls, task):

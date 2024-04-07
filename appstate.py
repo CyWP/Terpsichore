@@ -165,6 +165,11 @@ class AppState:
             print(f'Attribute {attr} is invalid.')
 
     @classmethod
+    def get_csv_file(_cls):
+        if _cls._active_model is not None:
+            return _cls._active_model.get_csv_file()
+
+    @classmethod
     def open_folder(_cls):
         try:
             subprocess.Popen(f'explorer "{_cls._root}"')
@@ -195,7 +200,11 @@ class AppState:
                     'send_pose': True,
                     'show': True,
                     'show_pose': True,
+                    'osc_ip': '127.0.0.1',
                     'osc_port': 2442,
+                    'osc_address': '/terp',
+                    'x_loc': 50.0,
+                    'y_loc': 50.0,
                     'max_frequency': 0,
                     'epochs': 50,
                     'target_loss': 0.,

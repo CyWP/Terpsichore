@@ -10,18 +10,18 @@ FONTS = {
     },
     'h2':
     {
-        'path': os.path.abspath('Assets/PPNeueMontreal-Medium.otf'),
-        'info': ('PP Neue Montreal Medium', 18)
+        'path': os.path.abspath('Assets/AlteHaasGroteskRegular'),
+        'info': ('Alte Haas Grotesk Regular', 18)
     },
     'p':
     {
-        'path': os.path.abspath('Assets/PPNeueMontreal-Book.otf'),
-        'info': ('PP Neue Montreal Book', 12)
+        'path': os.path.abspath('Assets/AlteHaasGroteskRegular'),
+        'info': ('Alte Haas Grotesk Regular', 12)
     },
     'tab':
     {
-        'path': os.path.abspath('Assets/PPNeueMontreal-Book.otf'),
-        'info': ('PP Neue Montreal Book', 10)
+        'path': os.path.abspath('Assets/AlteHaasGroteskRegular'),
+        'info': ('Alte Haas Grotesk Regular', 10)
     }
     }
 

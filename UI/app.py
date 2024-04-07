@@ -19,7 +19,7 @@ class App(CTk):
               
               self.iconbitmap('UI/Assets/dance.ico')
               self.resizable(width=False, height=False)
-              self.wm_minsize(width=566, height=328)
+              self.wm_minsize(width=580, height=328)
               self.columnconfigure(0, weight=1)
               self.rowconfigure(0, weight=1)
               self.protocol("WM_DELETE_WINDOW", self.on_closing)

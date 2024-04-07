@@ -28,6 +28,8 @@ class Model():
         for gesture in listdir(self.path):
             if path.isdir(path.join(self.path, gesture)):
                 self.gestures[gesture] = Gesture(path.join(self.path, gesture), new=False)
+        if len(self.gestures.keys()):
+            self.select_gesture(list(self.gestures.keys())[0])
 
     def create(self):
         self.info = Model.default_info()
@@ -39,11 +41,15 @@ class Model():
     def add_gesture(self, name):
         if not path.exists(path.join(self.path, name)):
             self.gestures[name] = Gesture(path.join(self.path, name), new=True)
+            self.select_gesture(name)
 
     def remove_gesture(self, name):
         try:
             self.gestures[name].erase_all()
             self.gestures.pop(name)
+            if self.active_gesture == name:
+                if len(self.gestures.keys()):
+                    self.select_gesture(list(self.gestures.keys())[0])
         except:
             pass
 
@@ -81,6 +87,10 @@ class Model():
                 ('Gestures', len(self.gestures.keys())),
                 ('Space', self.gesture_space()),
                 ('Is trained', str(self.has_trained_model()))]
+    
+    def get_csv_file(self):
+        if self.active_gesture is not None:
+            return path.join(self.path, self.active_gesture, f'{int(time.time()*10)}.csv')
 
 class Gesture():
 

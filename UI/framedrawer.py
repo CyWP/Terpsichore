@@ -18,6 +18,10 @@ from .customclasses import (Button,
                             ModelInfoFrame,
                             ColImage)
 from appstate import AppState
+from ENGINE.engine import Engine
+from ENGINE.tasks import Tasks
+from taskmanager import TaskManager
+import asyncio
 
 class ConsciousFrame(CTkFrame):
 
@@ -29,7 +33,9 @@ class ConsciousFrame(CTkFrame):
 
         self.input_delay = StringVar(self, AppState.get_attr('delay'))
         self.video_path = StringVar(self, value=AppState.get_attr('video_path'))
+        self.osc_ip = StringVar(self, value=AppState.get_attr('osc_ip'))
         self.osc_port = StringVar(self, value=AppState.get_attr('osc_port'))
+        self.osc_address = StringVar(self, value=AppState.get_attr('osc_address'))
         self.max_freq = StringVar(self, value=AppState.get_attr('max_frequency'))
         self.input_duration = StringVar(self, value=AppState.get_attr('duration'))
         self.webcam_active = BooleanVar(self, value=AppState.get_attr('webcam_active'))
@@ -37,6 +43,8 @@ class ConsciousFrame(CTkFrame):
         self.train_epochs = StringVar(self, value=AppState.get_attr('epochs'))
         self.target_loss = StringVar(self, value=AppState.get_attr('target_loss'))
         self.test_split = DoubleVar(self, value=AppState.get_attr('test_split'))
+        self.x_loc = DoubleVar(self, value=AppState.get_attr('x_loc'))
+        self.y_loc = DoubleVar(self, value=AppState.get_attr('y_loc'))
         self.classification_output = StringVar(self, value=AppState.get_attr('class_output'))
 
         self.left = NormalFrame(self)
@@ -49,6 +57,8 @@ class ConsciousFrame(CTkFrame):
         self.right.columnconfigure(3, weight=1)
 
         self.input_settings_frame = NormalFrame(self.right)
+        self.osc_settings_frame = NormalFrame(self.right)
+        self.osc_settings_frame.columnconfigure(index=[i for i in range(5)], weight=1)
         self.class_table = ClassTable(self.right)
         self.load_model_frame = LoadModelFrame(self.right, refresh=self.redrawHome)
         self.model_info_frame = ModelInfoFrame(self.right)
@@ -63,11 +73,20 @@ class ConsciousFrame(CTkFrame):
         self.use_cuda = CheckBox(self.right, text='CUDA')
         self.use_regularization = CheckBox(self.right, text='Pose')
 
-        self.osc_port_entry = Entry(self.right, width=54, textvariable=self.osc_port)
+        self.osc_ip_entry = Entry(self.osc_settings_frame, width=108, textvariable=self.osc_ip)
+        self.osc_port_entry = Entry(self.osc_settings_frame, width=54, textvariable=self.osc_port)
+        self.osc_address_entry = Entry(self.osc_settings_frame, width=54, textvariable=self.osc_address)
+        Label(self.osc_settings_frame, text='OSC [ Ip, Port, Adress ]').grid(row=0, column=0, columnspan=2, sticky='w')
+        self.osc_ip_entry.grid(row=0, column=2, sticky='w')
+        self.osc_port_entry.grid(row=0, column=3, sticky='w')
+        self.osc_address_entry.grid(row=0, column=4, sticky='w')
+        
         self.max_freq_entry = Entry(self.right, width=36, textvariable=self.max_freq)
         self.train_epochs_entry = Entry(self.right, width=36, textvariable=self.train_epochs)
         self.target_loss_entry = Entry(self.right, textvariable=self.target_loss)
-        self.test_split_label = Label(self.right, text=AppState.get_attr('test_split'))
+        self.test_split_label = Label(self.right, text=f'{self.test_split.get():.2f}%')
+        self.x_loc_label = Label(self.right, text=f'{self.x_loc.get():.2f}%')
+        self.y_loc_label = Label(self.right, text=f'{self.y_loc.get():.2f}%')
         self.new_gesture_entry = Entry(self.right, width=0, placeholder_text='')
         self.new_model_entry = Entry(self.right, width=0, placeholder_text='')
         self.new_model_button = Button(self.right, type='ACTION', text='New Model', command=self.new_model)
@@ -80,6 +99,8 @@ class ConsciousFrame(CTkFrame):
         self.webcam_rb = RadioButton(self.right, text='Webcam', command=self.set_input_webcam)
         self.video_rb = RadioButton(self.right, text='Video', command=self.set_input_video)
         self.test_split_slider = Slider(self.right, from_=0, to=100, number_of_steps=400, command=self.test_split_callback, variable=self.test_split)
+        self.x_loc_slider = Slider(self.right, from_=0, to=100, number_of_steps=400, command=self.x_loc_callback, variable=self.x_loc)
+        self.y_loc_slider = Slider(self.right, from_=0, to=100, number_of_steps=400, command=self.y_loc_callback, variable=self.y_loc)
 
         self.home_img = ColImage(self.left, path='UI/Assets/home.png', size=(150, 263), color=self.test_split_label.cget('text_color'))
         self.move_img = ColImage(self.left, path='UI/Assets/move.png', size=(150, 214), color=self.test_split_label.cget('text_color'))
@@ -135,9 +156,9 @@ class ConsciousFrame(CTkFrame):
             self.video_rb.deactivate()
             Label(self.input_settings_frame, text="Delay").grid(row=0, column=0, sticky='w')
             self.input_delay_entry.grid(row=0, column=1, sticky='w')
-            Label(self.input_settings_frame, text="Duration").grid(row=0, column=2, sticky='w')
+            Label(self.input_settings_frame, text="Duration").grid(row=0, column=2, sticky='e')
             self.input_duration_entry.grid(row=0, column=3, sticky='w')
-            Label(self.input_settings_frame, text="Index").grid(row=0, column=4, sticky='w')
+            Label(self.input_settings_frame, text="Index").grid(row=0, column=4, sticky='e')
             self.webcam_index_entry.grid(row=0, column=5, sticky='w')
         try:
             self.video_path_button.destroy()
@@ -147,6 +168,12 @@ class ConsciousFrame(CTkFrame):
 
     def test_split_callback(self, value):
         self.test_split_label.configure(text=f'{value}%')
+
+    def x_loc_callback(self, value):
+        self.x_loc_label.configure(text=f'{value}%')
+
+    def y_loc_callback(self, value):
+        self.y_loc_label.configure(text=f'{value}%')
 
     def redrawHome(self):
         self.state=''
@@ -163,12 +190,12 @@ class ConsciousFrame(CTkFrame):
             right = self.right
             self.home_img.pack(side='top', anchor ='nw', fill='y')
 
-            self.new_model_entry.grid(row=0, column=0, columnspan=2, sticky='ew', pady=8)
+            self.new_model_entry.grid(row=0, column=0, columnspan=2, sticky='ew', pady=(6, 8))
             self.new_model_button.grid(row=1, column=0, columnspan=1, sticky='ew', padx=(0, 4))
 
             self.copy_model_button.grid(row=1, column=1, columnspan=1, sticky='ew', padx=(4, 0))
             
-            self.load_model_frame.grid(column=3, columnspan=1, row=0, rowspan=7, sticky='new', pady=8, padx=8)
+            self.load_model_frame.grid(column=3, columnspan=1, row=0, rowspan=7, sticky='new', pady=8, padx=(8, 0))
             
             self.model_info_frame.grid(row=2, rowspan=4, column=0, columnspan=2, sticky='nesw', pady=8)
 
@@ -219,10 +246,17 @@ class ConsciousFrame(CTkFrame):
                 self.display_pose.toggle()
             row+=1
 
-            Label(right, text='OSC Port').grid(row=row, column=0, sticky='w')
-            self.osc_port_entry.grid(row=row, column=1, sticky='w')
-            Label(right, text='Max Freq').grid(row=row, column=2, sticky='w')
-            self.max_freq_entry.grid(row=row, column=3, sticky='')
+            Label(right, text='X Loc').grid(row=row, column=0, columnspan=1, sticky='w')
+            self.x_loc_label.grid(row=row, column=3, columnspan=1, sticky='e')
+            self.x_loc_slider.grid(row=row, column=1, columnspan=3, sticky = 'w')
+            row += 1
+
+            Label(right, text='Y Loc').grid(row=row, column=0, columnspan=1, sticky='w')
+            self.y_loc_label.grid(row=row, column=3, columnspan=1, sticky='e')
+            self.y_loc_slider.grid(row=row, column=1, columnspan=3, sticky = 'w')
+            row += 1
+
+            self.osc_settings_frame.grid(row=row, column=0, columnspan=4, sticky='nesw')
 
             self.spreadrows(row)
 
@@ -231,7 +265,7 @@ class ConsciousFrame(CTkFrame):
         if(self.clearFrame('record')):
             
             left = self.left
-            Button(left, type='BIG', text='RECORD').pack(anchor='sw', side='bottom')
+            Button(left, type='BIG', text='RECORD', command=self.record).pack(anchor='sw', side='bottom')
             Button(left, type='BIG', text='UNDO').pack(anchor='sw', side='bottom')
             right = self.right
             self.rec_img.pack(side='top', anchor ='n', fill='y')
@@ -254,12 +288,20 @@ class ConsciousFrame(CTkFrame):
                 self.video_rb.invoke()
             row+=1
 
-            Label(right, text='Name').grid(row=row, column=0, columnspan=1, sticky='w')
-            self.new_gesture_entry.grid(row=row, column=1, columnspan=2, sticky='ew', padx=8)
+            Label(right, text='Display').grid(row=row, column=0, sticky='w')
+            self.display_input.grid(row=row, column=1, columnspan=1, sticky='e')
+            if AppState.get_attr('show')!=self.display_input.get():
+                self.display_input.toggle()
+            self.display_pose.grid(row=row, column=3, columnspan=1, sticky='w')
+            if AppState.get_attr('show_pose')!=self.display_pose.get():
+                self.display_pose.toggle()
+            row+=1
+
+            self.new_gesture_entry.grid(row=row, column=0, columnspan=3, sticky='ew', padx=(0, 8))
             self.new_gesture_button.grid(row=row, column=3, sticky='ew')
             row+=1
 
-            self.class_table.grid(row=row, rowspan=2, column=0, columnspan=4, sticky='nesw', ipadx=5)
+            self.class_table.grid(row=row, rowspan=2, column=0, columnspan=4, sticky='nesw', ipadx=5, pady=(8, 0))
 
             right.rowconfigure(row, weight=0)
 
@@ -285,7 +327,6 @@ class ConsciousFrame(CTkFrame):
             Label(right, text='Test Split').grid(row=row, column=0, columnspan=1, sticky='w')
             self.test_split_label.grid(row=row, column=3, columnspan=1, sticky='e')
             self.test_split_slider.grid(row=row, column=1, columnspan=3, sticky = 'w')
-            #self.test_split_callback(self.test_split.get())
 
             row+=1
 
@@ -320,7 +361,9 @@ class ConsciousFrame(CTkFrame):
                 'target_loss': float(self.target_loss.get()),
                 'test_split': float(self.test_split.get()),
                 'cuda': self.use_cuda.get(),
-                'regularization': self.use_regularization.get()}
+                'regularization': self.use_regularization.get(),
+                'x_loc': self.x_loc.get(),
+                'y_loc': self.y_loc.get()}
         AppState.set_ui_state(ui_state)
 
     def get_ui_inputs(self):
@@ -360,6 +403,11 @@ class ConsciousFrame(CTkFrame):
             self.master.title('Load or create a model')
         else:
             self.master.title(title)
+
+    def record(self):
+        self.set_ui_inputs()
+        self.master.withdraw()
+        TaskManager.register_task(asyncio.create_task(Engine.launch(task=Tasks.RECORD, after=lambda: self.master.deiconify())))
 
     def log(self, msg):
         self.logs_frame.update(msg)
