@@ -17,6 +17,7 @@ from .Assets import (BUTTON_TYPES,
                      FONTS,
                      getRandomHoverColor)
 from appstate import AppState
+import asyncio
 
 def hex_to_rgb(value):
     return tuple([int(255*x) for x in colors.hex2color(value)])
@@ -251,10 +252,14 @@ class LogFrame(CTkScrollableFrame):
           
         super().__init__(args, corner_radius=1, border_width=1, width=160, height=132, **kwargs)
         self._scrollbar._set_dimensions(width=10, height=120)
-        Label(self, text='Training Logs').pack(anchor='w', side='top')
+        Log(self, text='Training Logs').pack(anchor='w', side='top')
 
-    def update(self, log):
-         Label(self, text=log).pack(anchor='w', side='top')
+    async def listen(self, log):
+        self.clear()
+        while(AppState.is_training()):
+            for log in AppState.get_train_logs():
+                Log(self, text=log).pack(anchor='w', side='top')
+            await asyncio.sleep(1)
 
     def clear(self):
          for child in self.winfo_children[1:]:

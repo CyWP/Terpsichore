@@ -11,9 +11,10 @@ class Model():
         self.gestures = {}
         self.root = dirpath
         self.path = path.join(dirpath, name)
-        self.model_path = path.join(self.path, 'model.ckpt')
+        self.weights_path = path.join(self.path, 'weights.ckpt')
         self.name = name
         self.active_gesture = None
+
         if new or not path.exists(self.path):
             self.create()
         else:
@@ -58,10 +59,13 @@ class Model():
             self.active_gesture = name
 
     def get_gestures(self):
-        return [(name, str(gesture.recs), f'{gesture.space/1000}kB') for name, gesture in self.gestures.items()]
+        return [(name, str(gesture.get_recs()), f'{gesture.get_space()/1000:.1f}kB') for name, gesture in self.gestures.items()]
+    
+    def num_gestures(self):
+        return len(self.gestures.items())
     
     def gesture_space(self):
-        return f'{sum([gesture.space for name, gesture in self.gestures.items()])/1000}kB'
+        return f'{sum([gesture.get_space() for name, gesture in self.gestures.items()])/1000}kB'
     
     @classmethod
     def default_info(_cls):
@@ -80,7 +84,7 @@ class Model():
         self.save()
 
     def has_trained_model(self):
-        return path.exists(self.model_path)
+        return path.exists(self.weights_path)
 
     def get_info(self):
         return [('Name', self.name),
@@ -91,6 +95,12 @@ class Model():
     def get_csv_file(self):
         if self.active_gesture is not None:
             return path.join(self.path, self.active_gesture, f'{int(time.time()*10)}.csv')
+        
+    def get_weights(self):
+        if path.isfile(self.weights_path):
+            return self.weights_path
+        else:
+            raise ValueError('You have not yet trained a model.')
 
 class Gesture():
 
@@ -116,6 +126,20 @@ class Gesture():
     def get_recording_file(self):
         self.last_rec = path.join(self.path, str(int(time.time())))
         return self.last_rec
+    
+    def get_recs(self):
+        self.recs = 0
+        for file in listdir(self.path):
+            if path.isfile(path.join(self.path, file)):
+                self.recs += 1
+        return self.recs
+
+    def get_space(self):
+        self.space = 0
+        for file in listdir(self.path):
+            if path.isfile(path.join(self.path, file)):
+                self.space += path.getsize(path.join(self.path, file))
+        return self.space
     
     def delete_last_rec(self):
         if self.last_rec is not None:

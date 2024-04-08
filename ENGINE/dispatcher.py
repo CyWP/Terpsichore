@@ -35,22 +35,26 @@ class CSVWriter(Dispatcher):
         self.data = []
         self.outfile = AppState.get_csv_file()
 
-    def dispatch(self, data):
+    def dispatch(self, mvmt, pose, gesture):
         """
         Dispatches data by appending it to the internal data list.
         
         Args:
             data: Data to be dispatched.
         """
-        self.data.append(data)
+        self.data.append(mvmt)
 
-    def close(self):
+    def close(self, err=False):
         """
-        Closes the CSVWriter by writing the internal data to a CSV file.
+        Closes the CSVWriter by writing the internal data to a CSV file if not closed due to an error.
+
+        Args:
+            err: Defines if function was called because of error.
         """
-        with open(self.outfile, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerows(self.data)
+        if not err:
+            with open(self.outfile, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerows(self.data)
 
 class OSCClient(Dispatcher):
     """
@@ -66,16 +70,19 @@ class OSCClient(Dispatcher):
         self.address = AppState.get_attr('osc_address')
         self.client = SimpleUDPClient(ip, port)
 
-    def dispatch(self, data):
+    def dispatch(self, mvmt, pose, gesture):
         """
         Dispatches data by sending it over OSC.
         
         Args:
-            data: Data to be dispatched.
+            mvmt, pose, gesture: Data to be dispatched.
         """
-        self.client.send_message(address=self.address, value=data)
+        self.client.send_message(address=f'{self.address}/mvmt', value=mvmt)
+        self.client.send_message(address=f'{self.address}/pose', value=pose)
+        self.client.send_message(address=f'{self.address}/class', value=gesture)
+        self.client.send_message(address=f'{self.address}/all', value=['class']+gesture.tolist()+['mvmt']+mvmt.tolist()+['pose']+pose.tolist())
 
-    def close(self):
+    def close(self, err=False):
         """
         Closes the OSCClient dispatcher by sending a completion message.
         """

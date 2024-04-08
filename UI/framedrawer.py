@@ -69,7 +69,11 @@ class ConsciousFrame(CTkFrame):
         self.classification_output_select = ComboBox(self.right, values=AppState._classification_outputs, variable=self.classification_output)
         self.send_pose_data = CheckBox(self.right, text='Send Pose Data')
         self.display_input = CheckBox(self.right, text='Input')
+        if AppState.get_attr('show')!=self.display_input.get():
+                self.display_input.toggle()
         self.display_pose = CheckBox(self.right, text='Pose')
+        if AppState.get_attr('show_pose')!=self.display_pose.get():
+                self.display_pose.toggle()
         self.use_cuda = CheckBox(self.right, text='CUDA')
         self.use_regularization = CheckBox(self.right, text='Pose')
 
@@ -376,6 +380,15 @@ class ConsciousFrame(CTkFrame):
         self.webcam_index.set(AppState.get_attr('webcam_index'))
         self.classification_output.set(AppState.get_attr('class_output'))
         self.test_split.set(AppState.get_attr('test_split'))
+        self.display_input.set(AppState.get_attr('show'))
+        self.display_pose.set(AppState.get_attr('show_pose'))
+        self.send_pose_data.set(AppState.get_Attr('send_pose'))
+        self.x_loc.set(AppState.get_Attr('x_loc'))
+        self.y_loc.set(AppState.get_Attr('y_loc'))
+        self.use_cuda.set(AppState.get_Attr('cuda'))
+        self.use_regularization.set(AppState.get_attr('regularization'))
+        self.target_loss.set(AppState.get_attr('target_loss'))
+        self.train_epochs.set(AppState.get_attr('epochs'))
 
     def add_gesture(self):
         self.class_table.add_gesture(self.new_gesture_entry.get())
@@ -407,7 +420,21 @@ class ConsciousFrame(CTkFrame):
     def record(self):
         self.set_ui_inputs()
         self.master.withdraw()
-        TaskManager.register_task(asyncio.create_task(Engine.launch(task=Tasks.RECORD, after=lambda: self.master.deiconify())))
+        TaskManager.register_task(asyncio.create_task(Engine.launch(task=Tasks.RECORD, after=lambda: self.after_exec('record'))))
+
+    def after_exec(self, frame:str):
+        self.state=''
+        if frame == 'home':
+            self.drawHomeFrame()
+        elif frame == 'move':
+            self.drawMoveFrame
+        elif frame == 'record':
+            self.drawTraceFrame()
+        elif frame == 'train':
+            self.drawTrainFrame()
+        else:
+            self.drawHomeFrame()
+        self.master.deiconify()
 
     def log(self, msg):
         self.logs_frame.update(msg)

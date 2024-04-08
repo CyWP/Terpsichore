@@ -4,7 +4,7 @@ from appstate import AppState
 import cv2
 import numpy as np
 import time
-#import copy
+import copy
 
 class VoidDrawer:
     """
@@ -22,12 +22,14 @@ class VoidDrawer:
         self.delay = AppState.get_attr('delay')
         self.cap = cap
         self.win_name = MoveNet.WINDOW_NAME.value
+        self.pose_color = MoveNet.POSE_COLOR.value
+        self.line_thick = MoveNet.LINE_THICKNESS.value
         self.font = MoveNet.FONT.value
         self.font_color = MoveNet.FONT_COLOR.value
         self.font_scale = MoveNet.FONT_SCALE.value
         self.font_loc = MoveNet.FONT_LOCATION.value
 
-    def output(self, frame, keypoints):
+    def output(self, frame, pose):
         """
         Placeholder method for outputting frame with keypoints.
 
@@ -62,15 +64,19 @@ class VoidDrawer:
 
         timer_start = time.time()  # Record the start time of the countdown
         timer_index = Timer.add_timer(duration=self.delay, action=Actions.POP)
+        ret, frame = self.cap.read()  # Read a new frame
+        baseframe = copy.deepcopy(frame)
         
         while not Timer.is_done(timer_index):
-            ret, frame = self.cap.read()  # Read a new frame
             if ret:
                 if self.use_webcam:
                     ret, frame = self.cap.read()
+                else:
+                    #We want to keep displaying the same first frame if the input is video
+                    frame = copy.deepcopy(baseframe)
                 remaining_time = max(0, self.delay - time.time() + timer_start)
                 text = f'{remaining_time:.2f}s'  # Format remaining time
-                cv2.putText(frame, text, self.font_loc, self.font, self.font_scale, self.font_color, 2, cv2.LINE_4)
+                cv2.putText(frame, text, self.font_loc, self.font, self.font_scale, self.font_color, self.line_thick, cv2.LINE_4)
                 cv2.imshow(self.win_name, frame)
                 if cv2.waitKey(10) & 0xFF == ord('q'):
                     break  # Break the loop if 'q' is pressed
@@ -82,7 +88,7 @@ class FrameDrawer(VoidDrawer):
     Drawer class for drawing frames.
     """
 
-    def draw(self, frame, keypoints):
+    def draw(self, frame, points):
         """
         Draws keypoints on the frame.
 
@@ -90,7 +96,7 @@ class FrameDrawer(VoidDrawer):
             frame: The input frame.
             keypoints: Detected keypoints.
         """
-        cv2.imshow(self.win_name, self.output(frame, keypoints))
+        cv2.imshow(self.win_name, self.output(frame, points))
 
 class KPDrawer(FrameDrawer):
     """
@@ -112,17 +118,14 @@ class KPDrawer(FrameDrawer):
             The output frame.
         """
         frame = super().output(frame, keypoints)
-        y, x, c = frame.shape
-        shaped = np.squeeze(np.multiply(keypoints, [y,x,1]))       
-        for kp in shaped:
-            ky, kx, kp_conf = kp
-            cv2.circle(frame, (int(kx), int(ky)), 4, (0,255,0), -1)
 
-        for edge, color in self.edges.items():
-            p1, p2, col = edge
-            y1, x1, _ = shaped[p1]
-            y2, x2, _ = shaped[p2]
-            cv2.line(frame, (int(x1), int(y1)), (int(x2), int(y2)), col, 2)
+        shaped = np.multiply(keypoints, frame.shape[:2]).astype(int)
+
+        for edge in self.edges:
+            p1, p2 = edge
+            y1, x1 = shaped[p1]
+            y2, x2 = shaped[p2]
+            cv2.line(frame, (x1, y1), (x2, y2), self.pose_color, self.line_thick)
         return frame
 
 def get_drawer(cap: cv2.VideoCapture):
@@ -135,7 +138,7 @@ def get_drawer(cap: cv2.VideoCapture):
     Returns:
         Drawer: An instance of the appropriate drawer.
     """
-    print(AppState.get_attr('show'))
+
     if not AppState.get_attr('show'):
         return VoidDrawer(cap)
     if AppState.get_attr('show_pose'):

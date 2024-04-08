@@ -11,6 +11,7 @@ class AppState:
     _models_dir = None
     _active_model = None
     _state = None
+    _training_logs = []
 
     _classification_outputs = ['Integer', 'Softmax', 'One Hot']
 
@@ -74,7 +75,17 @@ class AppState:
             _cls.load_model(_cls._state_dict['active_model'])
         else:
             _cls._state_dict['active_model'] = None
-    
+
+    @classmethod
+    def get_model_weights(_cls):
+        if _cls._active_model is not None:
+            return _cls._active_model.get_weights()
+        
+    @classmethod
+    def get_num_classes(_cls):
+        if _cls._active_model is not None:
+            return _cls._active_model.num_gestures()
+             
     @classmethod
     def save_model(_cls):
         _cls._active_model.save()
@@ -168,6 +179,24 @@ class AppState:
     def get_csv_file(_cls):
         if _cls._active_model is not None:
             return _cls._active_model.get_csv_file()
+    
+    @classmethod
+    def start_train(_cls):
+        _cls._training = True
+
+    @classmethod
+    def end_train(_cls):
+        _cls._training = False
+
+    @classmethod
+    def train_log(_cls, log):
+        _cls._training_logs.append(log)
+
+    @classmethod
+    def get_train_logs(_cls):
+        temp = _cls._training_logs
+        _cls._training_logs = []
+        return temp
 
     @classmethod
     def open_folder(_cls):

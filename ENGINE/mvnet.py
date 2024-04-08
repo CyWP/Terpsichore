@@ -5,26 +5,26 @@ from os import path
 
 class MoveNet(Enum):
 
-        EDGES = {
-        (0, 1, (0, 255, 0)): 'm',
-        (0, 2, (0, 0, 255)): 'c',
-        (1, 3, (0, 0, 255)): 'm',
-        (2, 4, (0, 0, 255)): 'c',
-        (0, 5, (0, 0, 255)): 'm',
-        (0, 6, (0, 0, 255)): 'c',
-        (5, 7, (0, 255, 0)): 'm', #left bicep
-        (7, 9,(0, 125, 0)): 'm', #left forearm
-        (6, 8, (255, 0, 0)): 'c', #right biecep
-        (8, 10, (125, 0, 0)): 'c', #right forearm
-        (5, 6, (255, 255, 255)): 'y', #collarbone
-        (5, 11, (0, 0, 255)): 'm',
-        (6, 12, (0, 0, 255)): 'c',
-        (11, 12, (255, 255, 255)): 'y', #hips
-        (11, 13, (0, 255, 255)): 'm', #left thigh
-        (13, 15,(0, 125, 125)): 'm', #left tibia
-        (12, 14, (255, 0, 255)): 'c', #right thigh
-        (14, 16, (125, 0, 125)): 'c' #right tibia
-        }
+        EDGES = (
+        (0, 1),
+        (0, 2),
+        (1, 3),
+        (2, 4),
+        (0, 5),
+        (0, 6),
+        (5, 7),
+        (7, 9),
+        (6, 8),
+        (8, 10),
+        (5, 6),
+        (5, 11),
+        (6, 12),
+        (11, 12),
+        (11, 13),
+        (13, 15),
+        (12, 14),
+        (14, 16),
+        )
     
         KEYPOINTS = {
         'nose': 0,
@@ -49,9 +49,15 @@ class MoveNet(Enum):
 
         INPUT_SIZE = 34
 
+        NUM_POINTS = 17
+
         MOMENTUM = 0.5
 
-        CONFIDENCE_THRESHOLD = 0.5
+        CONFIDENCE_THRESHOLD = 0.1
+
+        POSE_COLOR = (0, 255, 0)
+
+        LINE_THICKNESS = 2
 
         FONT = cv2.FONT_HERSHEY_SIMPLEX
 
