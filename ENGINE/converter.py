@@ -42,7 +42,7 @@ class Converter:
         keypoints_with_scores = np.reshape(keypoints_with_scores, keypoints_with_scores.shape[-2:])
         keypoints = keypoints_with_scores[:, :-1]
         threshold_mask = (keypoints_with_scores[:, -1] > self.threshold)[:, np.newaxis]
-        self.mvmt = (keypoints - self.pose) * threshold_mask + self.mvmt * ~threshold_mask
+        self.mvmt = self.momentum*self.mvmt +(1-self.momentum)*(keypoints - self.pose) * threshold_mask + self.mvmt * ~threshold_mask
         self.pose += self.mvmt
 
 class ConverterClassifier(Converter):

@@ -7,10 +7,10 @@ import shutil
 class Model():
 
     def __init__(self, dirpath, name, new:bool):
-        self.info = {}
         self.gestures = {}
         self.root = dirpath
         self.path = path.join(dirpath, name)
+        self.info_path = path.join(self.path, 'info.json')
         self.weights_path = path.join(self.path, 'weights.ckpt')
         self.name = name
         self.active_gesture = None
@@ -22,7 +22,7 @@ class Model():
 
     def load(self):
         try:
-            with open(path.join(self.path, 'info.json'), 'r') as f:
+            with open(self.info_path, 'r') as f:
                 self.info = json.load(f)
         except:
             self.info = Model.default_info()
@@ -61,6 +61,9 @@ class Model():
     def get_gestures(self):
         return [(name, str(gesture.get_recs()), f'{gesture.get_space()/1000:.1f}kB') for name, gesture in self.gestures.items()]
     
+    def gesture_paths(self):
+        return [(name, gesture.path) for name, gesture in self.gestures.items()]
+    
     def num_gestures(self):
         return len(self.gestures.items())
     
@@ -69,11 +72,14 @@ class Model():
     
     @classmethod
     def default_info(_cls):
-        return {}
+        return {
+            'trained': False,
+            'gestures': {}
+        }
 
     def save(self):
-        with open(path.join(self.path, 'info.json'), 'w') as f:
-            json.dump(f)
+        with open(self.info_path, 'w') as f:
+            json.dump(self.info, f)
 
     def save_as(self, name):
         self.path = path.join(self.root, name)
@@ -83,24 +89,30 @@ class Model():
             gesture.rebase(path.join(self.path, gesture))
         self.save()
 
-    def has_trained_model(self):
-        return path.exists(self.weights_path)
+    def is_trained(self):
+        return self.info['trained']
 
     def get_info(self):
         return [('Name', self.name),
+                ('Path', self.path),
                 ('Gestures', len(self.gestures.keys())),
                 ('Space', self.gesture_space()),
-                ('Is trained', str(self.has_trained_model()))]
+                ('Is trained', str(self.is_trained()))]
+    
+    def get_training_info(self):
+        return [(gesture, label) for gesture, label in self.info['gestures'].items()]
     
     def get_csv_file(self):
         if self.active_gesture is not None:
             return path.join(self.path, self.active_gesture, f'{int(time.time()*10)}.csv')
         
     def get_weights(self):
-        if path.isfile(self.weights_path):
             return self.weights_path
-        else:
-            raise ValueError('You have not yet trained a model.')
+    
+    def update_model_info(self, label_map: dict):
+        self.info['trained'] = True
+        self.info['gestures'] = label_map
+        self.save()
 
 class Gesture():
 

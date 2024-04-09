@@ -69,8 +69,6 @@ class Engine:
             #initialize count down phase
             drawer.countdown()
 
-            print(frame)
-
             # Add timer
             main_timer = Timer.add_timer(duration=duration, action=Actions.POP)
 

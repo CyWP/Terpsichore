@@ -1,5 +1,5 @@
 import json
-from os import path, makedirs, listdir
+from os import path, makedirs, listdir, remove
 import subprocess
 import webbrowser
 import shutil
@@ -11,7 +11,9 @@ class AppState:
     _models_dir = None
     _active_model = None
     _state = None
+    _training = False
     _training_logs = []
+    _file_records = []
 
     _classification_outputs = ['Integer', 'Softmax', 'One Hot']
 
@@ -81,6 +83,16 @@ class AppState:
         if _cls._active_model is not None:
             return _cls._active_model.get_weights()
         
+    @classmethod
+    def get_model_dir(_cls):
+        if _cls._active_model is not None:
+            return _cls._active_model.path
+        
+    @classmethod
+    def get_gesture_paths(_cls):
+        if _cls._active_model is not None:
+            return _cls._active_model.gesture_paths()
+
     @classmethod
     def get_num_classes(_cls):
         if _cls._active_model is not None:
@@ -178,7 +190,14 @@ class AppState:
     @classmethod
     def get_csv_file(_cls):
         if _cls._active_model is not None:
-            return _cls._active_model.get_csv_file()
+            rec = _cls._active_model.get_csv_file()
+            _cls._file_records.append(rec)
+            return rec
+        
+    @classmethod
+    def undo_last_rec(_cls):
+        if len(_cls._file_records):
+            remove(_cls._file_records.pop())
     
     @classmethod
     def start_train(_cls):
@@ -190,13 +209,30 @@ class AppState:
 
     @classmethod
     def train_log(_cls, log):
+        print(log)
         _cls._training_logs.append(log)
+
+    @classmethod
+    def get_trained_info(_cls):
+        if _cls._active_model is not None:
+            return _cls._active_model.get_training_info()
 
     @classmethod
     def get_train_logs(_cls):
         temp = _cls._training_logs
         _cls._training_logs = []
         return temp
+    
+    @classmethod
+    def is_trained(_cls):
+        if _cls._active_model is not None:
+            return _cls._active_model.is_trained()
+        return False
+    
+    @classmethod
+    def update_model(_cls, label_map: dict):
+        if _cls._active_model is not None:
+            _cls._active_model.update_model_info(label_map)
 
     @classmethod
     def open_folder(_cls):

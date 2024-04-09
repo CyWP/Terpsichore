@@ -219,9 +219,9 @@ class ClassTable(CTkScrollableFrame):
         for widget in self.winfo_children():
              widget.destroy()
 
-        Label(self, text='Gesture').grid(row=0, column=1, sticky='w')
-        Label(self, text='Samples').grid(row=0, column=2, sticky='w')
-        Label(self, text='Size').grid(row=0, column=3, sticky='w')
+        Log(self, text='Gesture').grid(row=0, column=1, sticky='w')
+        Log(self, text='Samples').grid(row=0, column=2, sticky='w')
+        Log(self, text='Size').grid(row=0, column=3, sticky='w')
 
         i=1
         for name, recs, space in AppState.get_gestures():
@@ -229,11 +229,15 @@ class ClassTable(CTkScrollableFrame):
                 Label(self, text='>>>').grid(row=i, column=0, sticky='w')
             else:
                 Button(self, type='ACTION', text='Select', command=lambda n=name:self.select_gesture(n)).grid(row=i, column=0, sticky='w')
-            Label(self, text=name).grid(row=i, column=1, sticky='w')
-            Label(self, text=recs).grid(row=i, column=2, sticky='w')
-            Label(self, text=space).grid(row=i, column=3, sticky='w')
+            Log(self, text=name).grid(row=i, column=1, sticky='w')
+            Log(self, text=recs).grid(row=i, column=2, sticky='w')
+            Log(self, text=space).grid(row=i, column=3, sticky='w')
             Button(self, type='ACTION', text='Delete', command=lambda n=name:self.remove_gesture(n)).grid(row=i, column=4, sticky='e')
             i+=1
+
+    def grid(self, **kwargs):
+        self.draw()
+        super().grid(**kwargs)
 
     def remove_gesture(self, name):
          AppState.remove_gesture(name)
@@ -251,18 +255,23 @@ class LogFrame(CTkScrollableFrame):
     def __init__(self, args, **kwargs):
           
         super().__init__(args, corner_radius=1, border_width=1, width=160, height=132, **kwargs)
-        self._scrollbar._set_dimensions(width=10, height=120)
+        self._scrollbar._set_dimensions(width=10, height=180)
+        self.max_label_length = 45
         Log(self, text='Training Logs').pack(anchor='w', side='top')
 
-    async def listen(self, log):
+    async def listen(self):
         self.clear()
-        while(AppState.is_training()):
+        while(AppState._training):
             for log in AppState.get_train_logs():
+                print('logg', log)
+                while len(log)>self.max_label_length:
+                    Log(self, text=log[:self.max_label_length]).pack(anchor='w', side='top')
+                    log = log[self.max_label_length:]
                 Log(self, text=log).pack(anchor='w', side='top')
-            await asyncio.sleep(1)
+            await asyncio.sleep(1.)
 
     def clear(self):
-         for child in self.winfo_children[1:]:
+         for child in self.winfo_children()[1:]:
               child.destroy()
 
 class ModelInfoFrame(CTkScrollableFrame):
@@ -270,27 +279,56 @@ class ModelInfoFrame(CTkScrollableFrame):
     def __init__(self, args, **kwargs):
         super().__init__(args, corner_radius=1, border_width=1, width=240, height=132, **kwargs)
         self._scrollbar._set_dimensions(width=10, height=152)
+        self.max_label_length = 24
         self.draw()
 
     def draw(self):
         for widget in self.winfo_children():
             widget.destroy()
         info = AppState.active_model_info()
+        gestures = AppState.get_gestures()
+        trained_gestures = AppState.get_trained_info()
         row=0
         self.columnconfigure(index=(0, 1), weight=1)
         if info is None:
-            Label(self, text='Load or Create a model', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
+            Log(self, text='Load or Create a model', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
         else:
-            Label(self, text='Current Model', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
+            Log(self, text='Current Model', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')           
+            row += 1
+            Log(self, text='', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
             row += 1
             for name, val in info:
-                Label(self, text=name).grid(row=row, column=0, sticky='w')
-                Label(self, text=val).grid(row=row, column=1, sticky='e')
+                Log(self, text=self.format(name)).grid(row=row, column=0, sticky='w')
+                Log(self, text=self.format(str(val))).grid(row=row, column=1, sticky='e')
+                row += 1
+            Log(self, text='', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
+            row += 1
+            Log(self, text='Current Gestures', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
+            row += 1
+            Log(self, text='', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
+            row += 1
+            for name, recs, space in gestures:
+                Log(self, text=self.format(f'{name}: {recs} samples ({space})', 1.75)).grid(row=row, column=0, columnspan=2, sticky='e')
+                row += 1
+            Log(self, text='', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
+            row += 1
+            Log(self, text='Trained Gestures', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
+            row += 1
+            Log(self, text='', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
+            row += 1
+            for name, label in trained_gestures:
+                Log(self, text=self.format(f'Gesture: {name}, label: {label} {[1 if i==label else 0 for i in range(len(trained_gestures)-1)]}', 1.75)).grid(row=row, column=0, columnspan=2, sticky='e')
                 row += 1
 
     def grid(self, **kwargs):
          self.draw()
          super().grid(**kwargs)
+
+    def format(self, text, mult=1.):
+        max = int(mult*self.max_label_length)
+        if len(text)>max:
+            return f'...{text[-max:]}'
+        return text
 class LoadModelFrame(CTkScrollableFrame):
 
     def __init__(self, args, refresh=None, **kwargs):

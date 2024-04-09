@@ -20,6 +20,7 @@ from .customclasses import (Button,
 from appstate import AppState
 from ENGINE.engine import Engine
 from ENGINE.tasks import Tasks
+from ENGINE.trainer import Trainer
 from taskmanager import TaskManager
 import asyncio
 
@@ -234,13 +235,6 @@ class ConsciousFrame(CTkFrame):
                 self.video_rb.invoke()
             row+=1
 
-            Label(right, text='Output').grid(row=row, column=0, sticky='w')
-            self.classification_output_select.grid(row=row, column=1, columnspan=2, sticky='w')
-            if AppState.get_attr('send_pose')!=self.send_pose_data.get():
-                self.send_pose_data.toggle()
-            self.send_pose_data.grid(row=row, column=2, columnspan=2, sticky='e')
-            row+=1
-
             Label(right, text='Display').grid(row=row, column=0, sticky='w')
             self.display_input.grid(row=row, column=1, columnspan=1, sticky='')
             if AppState.get_attr('show')!=self.display_input.get():
@@ -270,7 +264,7 @@ class ConsciousFrame(CTkFrame):
             
             left = self.left
             Button(left, type='BIG', text='RECORD', command=self.record).pack(anchor='sw', side='bottom')
-            Button(left, type='BIG', text='UNDO').pack(anchor='sw', side='bottom')
+            Button(left, type='BIG', text='UNDO', command=self.undo_record).pack(anchor='sw', side='bottom')
             right = self.right
             self.rec_img.pack(side='top', anchor ='n', fill='y')
 
@@ -315,7 +309,7 @@ class ConsciousFrame(CTkFrame):
         
         if(self.clearFrame('train')):
             left = self.left
-            Button(left, type='BIG', text='TRAIN').pack(anchor='sw', side='bottom')
+            Button(left, type='BIG', text='TRAIN', command=self.train).pack(anchor='sw', side='bottom')
             Button(left, type='BIG', text='STOP').pack(anchor='sw', side='bottom')
             right = self.right
             self.train_img.pack(side='top', anchor ='n', fill='y')
@@ -324,22 +318,11 @@ class ConsciousFrame(CTkFrame):
 
             Label(right, text='Epochs').grid(row=row, column=0, columnspan=1, sticky='w')
             self.train_epochs_entry.grid(row=row, column=1, sticky='w')
-            Label(right, text='Target Loss').grid(row=row, column=2, columnspan=1, sticky='e')
-            self.target_loss_entry.grid(row=row, column=3, sticky='w')
             row+=1
             
             Label(right, text='Test Split').grid(row=row, column=0, columnspan=1, sticky='w')
             self.test_split_label.grid(row=row, column=3, columnspan=1, sticky='e')
             self.test_split_slider.grid(row=row, column=1, columnspan=3, sticky = 'w')
-
-            row+=1
-
-            self.use_cuda.grid(row=row, column=1, columnspan=1, sticky='w')
-            if AppState.get_attr('cuda') != self.use_cuda.get():
-                self.use_cuda.toggle()
-            if AppState.get_attr('regularization') != self.use_regularization.get():
-                self.use_regularization.toggle()
-            self.use_regularization.grid(row=row, column=3, columnspan=1, sticky='w')
             row+=1
 
             self.logs_frame = LogFrame(right)
@@ -421,6 +404,16 @@ class ConsciousFrame(CTkFrame):
         self.set_ui_inputs()
         self.master.withdraw()
         TaskManager.register_task(asyncio.create_task(Engine.launch(task=Tasks.RECORD, after=lambda: self.after_exec('record'))))
+
+    def undo_record(self):
+        AppState.undo_last_rec()
+        self.after_exec('record')
+
+    def train(self):
+        self.set_ui_inputs()
+        AppState.start_train()
+        TaskManager.register_task(asyncio.create_task(Trainer.train()))
+        TaskManager.register_task(asyncio.create_task(self.logs_frame.listen()))
 
     def after_exec(self, frame:str):
         self.state=''
