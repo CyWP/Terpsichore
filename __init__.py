@@ -16,7 +16,7 @@ async def main():
     TaskManager.register_task(asyncio.create_task(app.mainloop()))
 
     try:
-        await asyncio.gather(TaskManager.run_tasks())
+        await TaskManager.run_tasks()
     except (KeyboardInterrupt, asyncio.exceptions.CancelledError) as e:
         pass
 

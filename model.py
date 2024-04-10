@@ -11,7 +11,7 @@ class Model():
         self.root = dirpath
         self.path = path.join(dirpath, name)
         self.info_path = path.join(self.path, 'info.json')
-        self.weights_path = path.join(self.path, 'weights.ckpt')
+        self.checkpoint = path.join(self.path, 'checkpoint')
         self.name = name
         self.active_gesture = None
 
@@ -79,7 +79,7 @@ class Model():
 
     def save(self):
         with open(self.info_path, 'w') as f:
-            json.dump(self.info, f)
+            json.dump(self.info, f, indent=4)
 
     def save_as(self, name):
         self.path = path.join(self.root, name)
@@ -106,8 +106,8 @@ class Model():
         if self.active_gesture is not None:
             return path.join(self.path, self.active_gesture, f'{int(time.time()*10)}.csv')
         
-    def get_weights(self):
-            return self.weights_path
+    def get_checkpoint_path(self):
+            return self.checkpoint
     
     def update_model_info(self, label_map: dict):
         self.info['trained'] = True

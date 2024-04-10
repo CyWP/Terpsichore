@@ -3,31 +3,40 @@ from os import path, listdir
 import numpy as np
 from .mvnet import MoveNet
 import tensorflow as tf
+import time
 from keras.utils import to_categorical
-from keras.utils import split_dataset
 from .classifier import get_classifier
 import traceback
+import threading
+from sklearn.model_selection import train_test_split
 
 class Trainer:
 
     @classmethod
     async def train(cls):
+        threading.Thread(target=cls.train_model).start()
+
+    @classmethod
+    def train_model(cls):
             
         try:
 
             AppState.start_train()
 
-            weights_path = AppState.get_model_weights()
+            weights_path = AppState.get_model_checkpoint()
+            test_split=AppState.get_attr('test_split')/100
             
             X, y, label_map = cls.preprocess()
 
             model = get_classifier()
-            print(X.shape, y.shape)
+            
             model.train(X, y)
 
-            model.save_weights(filepath=weights_path)
+            model.save(filepath=weights_path)
 
             AppState.update_model(label_map)
+
+            time.sleep(1)#to let time for frame to get all logs
 
             AppState.end_train()
         

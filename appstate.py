@@ -79,9 +79,9 @@ class AppState:
             _cls._state_dict['active_model'] = None
 
     @classmethod
-    def get_model_weights(_cls):
+    def get_model_checkpoint(_cls):
         if _cls._active_model is not None:
-            return _cls._active_model.get_weights()
+            return _cls._active_model.get_checkpoint_path()
         
     @classmethod
     def get_model_dir(_cls):

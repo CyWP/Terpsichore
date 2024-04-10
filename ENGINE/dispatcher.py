@@ -8,19 +8,13 @@ class Dispatcher:
     Base class for dispatchers.
     """
 
-    def dispatch(self, data):
-        """
-        Dispatches data.
-        
-        Args:
-            data: Data to be dispatched.
-        """
+    def dispatch(self, mvmt, pose, gesture, exts):
+        pass
+
+    def start(self):
         pass
 
     def close(self):
-        """
-        Closes the dispatcher.
-        """
         pass
 
 class CSVWriter(Dispatcher):
@@ -29,19 +23,10 @@ class CSVWriter(Dispatcher):
     """
 
     def __init__(self):
-        """
-        Initializes the CSVWriter dispatcher.
-        """
         self.data = []
         self.outfile = AppState.get_csv_file()
 
-    def dispatch(self, mvmt, pose, gesture):
-        """
-        Dispatches data by appending it to the internal data list.
-        
-        Args:
-            data: Data to be dispatched.
-        """
+    def dispatch(self, mvmt, pose, gesture, exts):
         self.data.append(mvmt)
 
     def close(self, err=False):
@@ -62,31 +47,27 @@ class OSCClient(Dispatcher):
     """
 
     def __init__(self):
-        """
-        Initializes the OSCClient dispatcher.
-        """
+
         ip = AppState.get_attr('osc_ip')
         port = AppState.get_attr('osc_port')
         self.address = AppState.get_attr('osc_address')
         self.client = SimpleUDPClient(ip, port)
 
-    def dispatch(self, mvmt, pose, gesture):
-        """
-        Dispatches data by sending it over OSC.
-        
-        Args:
-            mvmt, pose, gesture: Data to be dispatched.
-        """
-        self.client.send_message(address=f'{self.address}/mvmt', value=mvmt)
-        self.client.send_message(address=f'{self.address}/pose', value=pose)
-        self.client.send_message(address=f'{self.address}/class', value=gesture)
-        self.client.send_message(address=f'{self.address}/all', value=['class']+gesture.tolist()+['mvmt']+mvmt.tolist()+['pose']+pose.tolist())
+    def start(self):
+        self.client.send_message(address=f'{self.address}/start', value=True)
+
+    def dispatch(self, mvmt, pose, gesture, exts):
+
+        self.client.send_message(address=f'{self.address}/mvmt', value=mvmt.tolist())
+        self.client.send_message(address=f'{self.address}/pose', value=pose.tolist())
+        self.client.send_message(address=f'{self.address}/class', value=gesture.tolist())
+        self.client.send_message(address=f'{self.address}/exts', value=exts.tolist())
 
     def close(self, err=False):
         """
         Closes the OSCClient dispatcher by sending a completion message.
         """
-        self.client.send_message(address='/done', value=True)
+        self.client.send_message(address=f'{self.address}/done', value=True)
 
 def get_dispatcher(task: str):
     """

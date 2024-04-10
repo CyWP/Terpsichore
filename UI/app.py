@@ -98,7 +98,7 @@ class App(CTk):
        async def mainloop(self, *args, **kwargs):
               while True:
                      self.update()
-                     await asyncio.sleep(0.01)
+                     await asyncio.sleep(0.1)
        
        async def cancel_all_tasks(self):
               await TaskManager.cancel_tasks()

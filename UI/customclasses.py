@@ -256,7 +256,7 @@ class LogFrame(CTkScrollableFrame):
           
         super().__init__(args, corner_radius=1, border_width=1, width=160, height=132, **kwargs)
         self._scrollbar._set_dimensions(width=10, height=180)
-        self.max_label_length = 45
+        self.max_label_length = 75
         Log(self, text='Training Logs').pack(anchor='w', side='top')
 
     async def listen(self):
@@ -268,7 +268,7 @@ class LogFrame(CTkScrollableFrame):
                     Log(self, text=log[:self.max_label_length]).pack(anchor='w', side='top')
                     log = log[self.max_label_length:]
                 Log(self, text=log).pack(anchor='w', side='top')
-            await asyncio.sleep(1.)
+            await asyncio.sleep(0.5)
 
     def clear(self):
          for child in self.winfo_children()[1:]:
@@ -317,7 +317,7 @@ class ModelInfoFrame(CTkScrollableFrame):
             Log(self, text='', anchor='center').grid(row=row, column=0, columnspan=2, sticky='w')
             row += 1
             for name, label in trained_gestures:
-                Log(self, text=self.format(f'Gesture: {name}, label: {label} {[1 if i==label else 0 for i in range(len(trained_gestures)-1)]}', 1.75)).grid(row=row, column=0, columnspan=2, sticky='e')
+                Log(self, text=self.format(f'{name}, label: {label} {[1 if i==label else 0 for i in range(len(trained_gestures))]}', 1.75)).grid(row=row, column=0, columnspan=2, sticky='e')
                 row += 1
 
     def grid(self, **kwargs):

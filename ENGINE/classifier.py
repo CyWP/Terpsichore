@@ -1,10 +1,8 @@
 from appstate import AppState
 import tensorflow as tf
-from keras import layers, models, regularizers, callbacks, Model
-from keras.utils import split_dataset
 from .mvnet import MoveNet
 
-class TrainingCallback(callbacks.Callback):
+class TrainingCallback(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         AppState.train_log(f"Epoch {epoch+1}, Loss: {logs['loss']}, Accuracy: {logs['accuracy']}")
@@ -15,7 +13,6 @@ class TrainingCallback(callbacks.Callback):
         AppState.train_log(logs)
 
     def on_train_end(self, logs=None):
-        AppState.end_train()
         AppState.train_log(logs)
         AppState.train_log("End of training")
 
@@ -48,22 +45,22 @@ class ShallowCNN(tf.keras.Model):
         self.model = tf.keras.Sequential()
         
         # Convolutional layers with L2 regularization
-        self.model.add(layers.Conv1D(32, kernel_size=3, activation='relu', input_shape=self.custom_input_shape, padding='same', kernel_regularizer=regularizers.l2(0.01)))
-        self.model.add(layers.MaxPooling1D(pool_size=2))
+        self.model.add(tf.keras.layers.Conv1D(32, kernel_size=3, activation='relu', input_shape=self.custom_input_shape, padding='same', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+        self.model.add(tf.keras.layers.MaxPooling1D(pool_size=2))
         
-        self.model.add(layers.Conv1D(64, kernel_size=3, activation='relu', padding='same', kernel_regularizer=regularizers.l2(0.01)))
-        self.model.add(layers.MaxPooling1D(pool_size=2))
+        self.model.add(tf.keras.layers.Conv1D(64, kernel_size=3, activation='relu', padding='same', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+        self.model.add(tf.keras.layers.MaxPooling1D(pool_size=2))
 
         # Adding another convolutional layer with L2 regularization
-        self.model.add(layers.Conv1D(128, kernel_size=3, activation='relu', padding='same', kernel_regularizer=regularizers.l2(0.01)))
-        self.model.add(layers.MaxPooling1D(pool_size=2))
+        self.model.add(tf.keras.layers.Conv1D(128, kernel_size=3, activation='relu', padding='same', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+        self.model.add(tf.keras.layers.MaxPooling1D(pool_size=2))
 
         # Flatten the feature maps
-        self.model.add(layers.Flatten())
+        self.model.add(tf.keras.layers.Flatten())
 
         # Dense layers
-        self.model.add(layers.Dense(128, activation='relu'))
-        self.model.add(layers.Dense(self.num_classes, activation='softmax'))
+        self.model.add(tf.keras.layers.Dense(128, activation='relu'))
+        self.model.add(tf.keras.layers.Dense(self.num_classes, activation='softmax'))
 
 
     def compile_model(self):
@@ -86,7 +83,7 @@ class ShallowCNN(tf.keras.Model):
         """
         return self.model(inputs)
     
-    def train(self, data, labels):
+    def train(self, X_trn, y_trn):
         """
         Trains the classification model.
 
@@ -99,10 +96,10 @@ class ShallowCNN(tf.keras.Model):
             batch_size (int): Batch size for training.
         """
         epochs = AppState.get_attr('epochs')
-        validation_split = AppState.get_attr('test_split')
+        
         batch_size = 32
 
-        self.model.fit(x=data, y=labels,
+        self.model.fit(x=X_trn, y=y_trn,
                        batch_size=batch_size,
                        epochs=epochs,
                        callbacks=[TrainingCallback()])
@@ -120,24 +117,14 @@ class ShallowCNN(tf.keras.Model):
         """
         return self.model.evaluate(x_test, y_test)
     
-    def save_weights(self, filepath):
+    def save(self, filepath):
         """
         Saves the weights of the classification model to a file.
 
         Args:
             filepath (str): Filepath to save the weights.
         """
-        self.model.save_weights(filepath)
-
-    def load_weights(self, filepath):
-        """
-        Loads the weights of the classification model from a file.
-
-        Args:
-            filepath (str): Filepath to load the weights from.
-        """
-        self.model.load_weights(filepath)
-
+        self.model.save(filepath)
 
 def get_classifier(name=''):
     """

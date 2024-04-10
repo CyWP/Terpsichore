@@ -1,9 +1,10 @@
 import numpy as np
+from numpy.linalg import norm
 from .mvnet import MoveNet
 import tensorflow as tf
-from .classifier import get_classifier
 from .tasks import Tasks
 from appstate import AppState
+import traceback
 class Converter:
     """
     Base class for converting keypoints with scores to movement, pose, and class output.
@@ -13,11 +14,12 @@ class Converter:
         """
         Initializes Converter object with default values.
         """
-        self.class_output = np.zeros((1,))
+        self.class_output = tf.convert_to_tensor(-1*np.ones((1,)))
         self.momentum = MoveNet.MOMENTUM.value
         self.threshold = MoveNet.CONFIDENCE_THRESHOLD.value
         self.pose = np.zeros((MoveNet.NUM_POINTS.value, 2))
         self.mvmt = np.zeros((MoveNet.NUM_POINTS.value, 2))
+        self.ext_mvmt = np.zeros((4, 3))
 
     def convert(self, keypoints_with_scores):
         """
@@ -30,7 +32,7 @@ class Converter:
             tuple: Tuple containing movement, pose, and class output.
         """
         self.compute_output(keypoints_with_scores)
-        return self.mvmt, self.pose, self.class_output
+        return self.mvmt, self.pose, self.class_output.numpy(), self.ext_mvmt
     
     def compute_output(self, keypoints_with_scores):
         """
@@ -55,8 +57,22 @@ class ConverterClassifier(Converter):
         Initializes ConverterClassifier object with default values.
         """
         super().__init__()
-        self.class_output = np.zeros((AppState.get_num_classes(),))
-        self.classifier = get_classifier()  # Assuming get_classifier() returns a classifier model
+        try:
+            self.classifier = tf.keras.models.load_model(AppState.get_model_checkpoint())
+        except(Exception) as e:
+            traceback.print_exc()
+            raise ValueError('No model has been trained!')
+    
+        self.class_input = np.zeros(self.classifier.input_shape[1:])
+        
+        self.class_output = np.zeros(self.classifier.output_shape[-1])
+        kpi = MoveNet.KEYPOINTS.value
+        self.ext_indices = [kpi['right_wrist'], kpi['left_wrist'], kpi['right_ankle'], kpi['left_ankle']]
+        self.joint_indices = [kpi['right_elbow'], kpi['left_elbow'], kpi['right_knee'], kpi['left_knee']]
+        self.hinge_indices = [kpi['right_shoulder'], kpi['left_shoulder'], kpi['right_hip'], kpi['left_hip']]
+        self.bust_indices = [kpi['right_shoulder'], kpi['right_hip']]
+        self.ext = np.zeros((4, 3))
+        self.ext_mvmt = np.zeros((4, 3))
     
     def compute_output(self, keypoints_with_scores):
         """
@@ -66,7 +82,36 @@ class ConverterClassifier(Converter):
             keypoints_with_scores (ndarray): Keypoints with scores.
         """
         super().compute_output(keypoints_with_scores)
-        self.class_output = self.classifier.predict()
+
+        self.class_input = np.concatenate([self.class_input, self.mvmt.ravel()[np.newaxis, :]])[1:, :]
+
+        self.class_output = self.classifier.call(tf.convert_to_tensor(self.class_input[None, ...]))
+
+        self.compute_extremities()
+
+    def compute_extremities(self):
+        """
+        Estimates 3d direction vector of extremities (wrists and ankles)
+        """
+        
+        hinges = self.pose[self.hinge_indices, :]
+        joints = self.pose[self.joint_indices, :]
+        exts = self.pose[self.ext_indices, :]
+
+        refs = norm(hinges-joints, axis=-1)+norm(joints-exts, axis=-1)
+        bustlengths = norm(np.diff(self.pose[self.bust_indices, :]))*np.ones(shape=(refs.shape))
+        refs = np.mean(np.max(np.moveaxis(np.stack((refs, bustlengths), axis=-1), -1, 0), axis=0))*np.ones((4, ))
+
+        l1 = norm(np.stack([norm(hinges-joints, axis=-1), refs/2], axis=-1), axis=-1)
+
+        l2 = norm(np.stack([norm(joints-exts, axis=-1),refs/2], axis=-1), axis=-1)
+
+        l2_dir = (-1., 1.)[norm(hinges-joints)>1.1*norm(joints-exts)]*np.array([-1., -1., 1., 1.])
+        pose_dir = (-1., 1.)[hinges[1, 0]<hinges[0, 0]]
+
+        poses = np.hstack((exts, (pose_dir*(l1 + l2_dir*l2))[:, np.newaxis]))
+        self.ext_mvmt = poses-self.ext
+        self.ext = poses
 
 def get_converter(task: str):
     """

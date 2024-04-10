@@ -148,6 +148,8 @@ class ConsciousFrame(CTkFrame):
       
     def set_input_video(self):
         if self.webcam_active.get():
+            for widget in self.input_settings_frame.winfo_children():
+                widget.grid_forget()
             self.webcam_active.set(False)
             self.webcam_rb.deactivate()
             Label(self.input_settings_frame, text="Delay").grid(row=0, column=0, sticky='w')
@@ -157,6 +159,8 @@ class ConsciousFrame(CTkFrame):
 
     def set_input_webcam(self):
         if not self.webcam_active.get():
+            for widget in self.input_settings_frame.winfo_children():
+                widget.grid_forget()
             self.webcam_active.set(True)
             self.video_rb.deactivate()
             Label(self.input_settings_frame, text="Delay").grid(row=0, column=0, sticky='w')
@@ -214,7 +218,7 @@ class ConsciousFrame(CTkFrame):
 
             left = self.left
             self.move_img.pack(side='top', anchor ='n', fill='y')
-            Button(left, type='BIG', text='MOVE').pack(anchor='sw', side='bottom')
+            Button(left, type='BIG', text='MOVE', command=self.move).pack(anchor='sw', side='bottom')
             right = self.right
 
             row = 0
@@ -408,6 +412,11 @@ class ConsciousFrame(CTkFrame):
     def undo_record(self):
         AppState.undo_last_rec()
         self.after_exec('record')
+
+    def move(self):
+        self.set_ui_inputs()
+        self.master.withdraw()
+        TaskManager.register_task(asyncio.create_task(Engine.launch(task=Tasks.PERFORM, after=lambda: self.after_exec('move'))))
 
     def train(self):
         self.set_ui_inputs()
