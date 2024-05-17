@@ -5,6 +5,8 @@ import tensorflow as tf
 from .tasks import Tasks
 from appstate import AppState
 import traceback
+from terpsexception import TerpsException
+from appstate import AppState
 class Converter:
     """
     Base class for converting keypoints with scores to movement, pose, and class output.
@@ -15,8 +17,8 @@ class Converter:
         Initializes Converter object with default values.
         """
         self.class_output = tf.convert_to_tensor(-1*np.ones((1,)))
-        self.momentum = MoveNet.MOMENTUM.value
-        self.threshold = MoveNet.CONFIDENCE_THRESHOLD.value
+        self.momentum = AppState.get_attr('momentum')
+        self.threshold = AppState.get_attr('conf_threshold')
         self.pose = np.zeros((MoveNet.NUM_POINTS.value, 2))
         self.mvmt = np.zeros((MoveNet.NUM_POINTS.value, 2))
         self.ext_mvmt = np.zeros((4, 3))
@@ -61,7 +63,7 @@ class ConverterClassifier(Converter):
             self.classifier = tf.keras.models.load_model(AppState.get_model_checkpoint())
         except(Exception) as e:
             traceback.print_exc()
-            raise ValueError('No model has been trained!')
+            raise TerpsException(f"Error: no model has been trained.")
     
         self.class_input = np.zeros(self.classifier.input_shape[1:])
         

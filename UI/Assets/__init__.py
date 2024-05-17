@@ -11,17 +11,17 @@ FONTS = {
     'h2':
     {
         'path': os.path.abspath('Assets/AlteHaasGroteskRegular'),
-        'info': ('Alte Haas Grotesk Regular', 18)
+        'info': ('Alte Haas Grotesk Regular', 24)
     },
     'p':
     {
         'path': os.path.abspath('Assets/AlteHaasGroteskRegular'),
-        'info': ('Alte Haas Grotesk Regular', 12)
+        'info': ('Alte Haas Grotesk Regular', 18)
     },
     'tab':
     {
         'path': os.path.abspath('Assets/AlteHaasGroteskRegular'),
-        'info': ('Alte Haas Grotesk Regular', 10)
+        'info': ('Alte Haas Grotesk Regular', 14)
     }
     }
 
@@ -63,7 +63,7 @@ BUTTON_TYPES = {
                          'border_width': None},
                 'ACTION': { 'font': FONTS['tab']['info'],
                          'width': 0,
-                         'height': 18,
+                         'height': 32,
                          'pad': 3,
                          'border_width': 1}      
                 }

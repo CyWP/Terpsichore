@@ -51,10 +51,6 @@ class MoveNet(Enum):
 
         NUM_POINTS = 17
 
-        MOMENTUM = 0.2
-
-        CONFIDENCE_THRESHOLD = 0.07
-
         POSE_COLOR = (0, 255, 0)
 
         LINE_THICKNESS = 2

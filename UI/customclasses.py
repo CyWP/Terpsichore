@@ -38,13 +38,13 @@ def colorize(filename, color, size=None):
 
 class ColImage(CTkLabel):
 
-    def __init__(self, master, path, size:tuple, color):
+    def __init__(self, master, path, size:tuple, color, anchor='nw'):
 
         self.path = path
         self.size=size
         img = colorize(path, color)
         img.configure(size=size)
-        super().__init__(master, image=img, text='')
+        super().__init__(master, image=img, text='', anchor=anchor)
 
         self.bind('<Enter>', lambda event: self.color(getRandomHoverColor()))
         self.bind('<Leave>', lambda event: self.color(color))
@@ -114,7 +114,7 @@ class Label(CTkLabel):
 
     def __init__(self, args, anchor='w', **kwargs):
 
-        super().__init__(args, font=FONTS['p']['info'], height=24, anchor=anchor, **kwargs)
+        super().__init__(args, font=FONTS['p']['info'], height=32, anchor=anchor, **kwargs)
 
     def grid(self, **kwargs):
 
@@ -126,7 +126,7 @@ class Log(CTkLabel):
      
     def __init__(self, args, **kwargs):
 
-        super().__init__(args, font=FONTS['tab']['info'], height=12, **kwargs)
+        super().__init__(args, font=FONTS['tab']['info'], height=18, **kwargs)
 
     def pack(self, **kwargs):
 
@@ -161,7 +161,7 @@ class CheckBox(CTkCheckBox):
 
     def __init__(self, args, **kwargs):
         
-        super().__init__(args, font=FONTS['p']['info'], checkbox_height=14, checkbox_width=14, **kwargs)
+        super().__init__(args, font=FONTS['p']['info'], checkbox_height=20, checkbox_width=20, **kwargs)
         self.base_color = self.cget('border_color')
 
         self.bind('<Leave>', lambda event: self.configure(border_color=self.base_color, checkmark_color=self.base_color))
@@ -172,7 +172,7 @@ class RadioButton(CTkRadioButton):
 
     def __init__(self, args, **kwargs):
         
-        super().__init__(args, radiobutton_height=14, radiobutton_width=14, font=FONTS['p']['info'], **kwargs)
+        super().__init__(args, radiobutton_height=20, radiobutton_width=20, font=FONTS['p']['info'], **kwargs)
 
         self.base_color = self.cget('text_color')
 
@@ -196,9 +196,9 @@ class RadioButton(CTkRadioButton):
 
 class Entry(CTkEntry):
      
-    def __init__(self, args, width=36, **kwargs):
+    def __init__(self, args, width=54, **kwargs):
           
-          super().__init__(args, height=20, width=width, font=FONTS['tab']['info'], **kwargs)
+          super().__init__(args, height=32, width=width, font=FONTS['tab']['info'], **kwargs)
 
     def clear(self):
         self.delete(0, (len(self.get())))
@@ -207,8 +207,8 @@ class ClassTable(CTkScrollableFrame):
      
     def __init__(self, args, **kwargs):
           
-        super().__init__(args, corner_radius=1, border_width=1, width=160, height=120, **kwargs)
-        self._scrollbar._set_dimensions(width=10, height=20)
+        super().__init__(args, corner_radius=1, border_width=1, width=240, height=254, **kwargs)
+        self._scrollbar._set_dimensions(width=10, height=254)
         for i in range(5):
             self.columnconfigure(i, weight=1)
 
@@ -228,11 +228,11 @@ class ClassTable(CTkScrollableFrame):
             if name == AppState.get_active_gesture():
                 Label(self, text='>>>').grid(row=i, column=0, sticky='w')
             else:
-                Button(self, type='ACTION', text='Select', command=lambda n=name:self.select_gesture(n)).grid(row=i, column=0, sticky='w')
+                Button(self, type='ACTION', text='Select', command=lambda n=name:self.select_gesture(n)).grid(row=i, column=0, sticky='ew')
             Log(self, text=name).grid(row=i, column=1, sticky='w')
             Log(self, text=recs).grid(row=i, column=2, sticky='w')
             Log(self, text=space).grid(row=i, column=3, sticky='w')
-            Button(self, type='ACTION', text='Delete', command=lambda n=name:self.remove_gesture(n)).grid(row=i, column=4, sticky='e')
+            Button(self, type='ACTION', text='Delete', command=lambda n=name:self.remove_gesture(n)).grid(row=i, column=4, sticky='ew')
             i+=1
 
     def grid(self, **kwargs):
@@ -254,16 +254,16 @@ class LogFrame(CTkScrollableFrame):
      
     def __init__(self, args, **kwargs):
           
-        super().__init__(args, corner_radius=1, border_width=1, width=160, height=132, **kwargs)
-        self._scrollbar._set_dimensions(width=10, height=180)
-        self.max_label_length = 75
+        super().__init__(args, corner_radius=1, border_width=1, width=240, height=254, **kwargs)
+        self._scrollbar._set_dimensions(width=10, height=340)
+        self.max_label_length = 125
         Log(self, text='Training Logs').pack(anchor='w', side='top')
 
     async def listen(self):
         self.clear()
         while(AppState._training):
             for log in AppState.get_train_logs():
-                print('logg', log)
+                log = str(log)
                 while len(log)>self.max_label_length:
                     Log(self, text=log[:self.max_label_length]).pack(anchor='w', side='top')
                     log = log[self.max_label_length:]
@@ -277,8 +277,8 @@ class LogFrame(CTkScrollableFrame):
 class ModelInfoFrame(CTkScrollableFrame):
 
     def __init__(self, args, **kwargs):
-        super().__init__(args, corner_radius=1, border_width=1, width=240, height=132, **kwargs)
-        self._scrollbar._set_dimensions(width=10, height=152)
+        super().__init__(args, corner_radius=1, border_width=1, width=360, height=282, **kwargs)
+        self._scrollbar._set_dimensions(width=10, height=282)
         self.max_label_length = 24
         self.draw()
 
@@ -332,8 +332,8 @@ class ModelInfoFrame(CTkScrollableFrame):
 class LoadModelFrame(CTkScrollableFrame):
 
     def __init__(self, args, refresh=None, **kwargs):
-        super().__init__(args, corner_radius=1, border_width=1, width=120, height=132, **kwargs)
-        self._scrollbar._set_dimensions(width=10, height=240)
+        super().__init__(args, corner_radius=1, border_width=1, width=180, height=224, **kwargs)
+        self._scrollbar._set_dimensions(width=10, height=330)
         self.refresh=refresh
         self.draw()
 

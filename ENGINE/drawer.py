@@ -11,7 +11,7 @@ class VoidDrawer:
     A drawer class that performs no drawing.
     """
 
-    def __init__(self, cap: cv2.VideoCapture):
+    def __init__(self, cap: cv2.VideoCapture, size:tuple):
         """
         Initializes the VoidDrawer.
 
@@ -21,6 +21,7 @@ class VoidDrawer:
         self.use_webcam = AppState.get_attr('webcam_active')
         self.delay = AppState.get_attr('delay')
         self.cap = cap
+        self.size = size
         self.win_name = MoveNet.WINDOW_NAME.value
         self.pose_color = MoveNet.POSE_COLOR.value
         self.line_thick = MoveNet.LINE_THICKNESS.value
@@ -40,7 +41,7 @@ class VoidDrawer:
         Returns:
             The output frame.
         """
-        return frame
+        return cv2.resize(frame, self.size)
 
     def draw(self, frame, keypoints):
         """
@@ -65,12 +66,13 @@ class VoidDrawer:
         timer_start = time.time()  # Record the start time of the countdown
         timer_index = Timer.add_timer(duration=self.delay, action=Actions.POP)
         ret, frame = self.cap.read()  # Read a new frame
-        baseframe = copy.deepcopy(frame)
+        baseframe = cv2.resize(copy.deepcopy(frame), self.size)
         
         while not Timer.is_done(timer_index):
             if ret:
                 if self.use_webcam:
                     ret, frame = self.cap.read()
+                    frame = cv2.resize(frame, self.size)
                 else:
                     #We want to keep displaying the same first frame if the input is video
                     frame = copy.deepcopy(baseframe)
@@ -96,14 +98,14 @@ class FrameDrawer(VoidDrawer):
             frame: The input frame.
             keypoints: Detected keypoints.
         """
-        cv2.imshow(self.win_name, self.output(frame, points))
+        cv2.imshow(self.win_name, self.output(cv2.resize(frame, self.size), points))
 
 class KPDrawer(FrameDrawer):
     """
     Drawer class for drawing keypoints on frames.
     """
-    def __init__(self, cap:cv2.VideoCapture):
-        super().__init__(cap)
+    def __init__(self, cap:cv2.VideoCapture, size:tuple):
+        super().__init__(cap, size)
         self.edges = MoveNet.EDGES.value
 
     def output(self, frame, keypoints):
@@ -119,7 +121,7 @@ class KPDrawer(FrameDrawer):
         """
         frame = super().output(frame, keypoints)
 
-        shaped = np.multiply(keypoints, frame.shape[:2]).astype(int)
+        shaped = np.multiply(keypoints, np.array(self.size)).astype(int)
 
         for edge in self.edges:
             p1, p2 = edge
@@ -128,7 +130,7 @@ class KPDrawer(FrameDrawer):
             cv2.line(frame, (x1, y1), (x2, y2), self.pose_color, self.line_thick)
         return frame
 
-def get_drawer(cap: cv2.VideoCapture):
+def get_drawer(cap: cv2.VideoCapture, size: tuple):
     """
     Factory function to get the appropriate drawer based on the application state.
 
@@ -140,8 +142,8 @@ def get_drawer(cap: cv2.VideoCapture):
     """
 
     if not AppState.get_attr('show'):
-        return VoidDrawer(cap)
+        return VoidDrawer(cap, size)
     if AppState.get_attr('show_pose'):
-        return KPDrawer(cap)
+        return KPDrawer(cap, size)
     else:
-        return FrameDrawer(cap)
+        return FrameDrawer(cap, size)

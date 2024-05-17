@@ -90,8 +90,6 @@ class ShallowCNN(tf.keras.Model):
         Args:
             x_train (numpy.ndarray): Training input data.
             y_train (numpy.ndarray): Training labels.
-            x_val (numpy.ndarray): Validation input data.
-            y_val (numpy.ndarray): Validation labels.
             epochs (int): Number of epochs for training.
             batch_size (int): Batch size for training.
         """

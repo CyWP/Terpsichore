@@ -19,7 +19,7 @@ class App(CTk):
               
               self.iconbitmap('UI/Assets/dance.ico')
               self.resizable(width=False, height=False)
-              self.wm_minsize(width=580, height=328)
+              self.wm_minsize(width=820, height=500)
               self.columnconfigure(0, weight=1)
               self.rowconfigure(0, weight=1)
               self.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -40,10 +40,10 @@ class App(CTk):
 
               self.body.drawHomeFrame()
               
-              title_length = 0.44 # just happens to align with title
+              title_length = 0.2 # just happens to align with title
               self.bottom.rowconfigure(0, weight=1)
               self.bottom.rowconfigure(1, weight=0)
-              for i in range(8):
+              for i in range(5):
                      self.bottom.columnconfigure(i, weight=1)
 
               self.botbar = CTkProgressBar(self.bottom, corner_radius=0, height=4)
@@ -51,48 +51,48 @@ class App(CTk):
               self.botbar.set(title_length)
 
               Button(master=self.bottom,
-                     text='TERPSICHORE',
+                     text='MODEL',
                      type='BIG',
                      fct=self.body.drawHomeFrame,
                      frame=self.body,
                      bar=self.botbar,
-                     barlevel=title_length).grid(row=0, column=0, columnspan=3, sticky='nsw')
+                     barlevel=title_length).grid(row=0, column=0, sticky='nsw')
               
               Button(master=self.bottom,
-                     text='Perform',
-                     type='MENU',
-                     fct=self.body.drawMoveFrame,
-                     frame=self.body,
-                     bar=self.botbar,
-                     barlevel=0.59).grid(row=0, column=4, sticky='nesw')
-              
-              Button(master=self.bottom,
-                     text='Record',
-                     type='MENU',
+                     text='RECORD',
+                     type='BIG',
                      fct=self.body.drawTraceFrame,
                      frame=self.body,
                      bar=self.botbar,
-                     barlevel=0.72).grid(row=0, column=5, sticky='nesw')
+                     barlevel=0.4).grid(row=0, column=1, sticky='nesw')
               
               Button(master=self.bottom,
-                     text='Train',
-                     type='MENU',
+                     text='TRAIN',
+                     type='BIG',
                      fct=self.body.drawTrainFrame,
                      frame=self.body,
                      bar=self.botbar,
-                     barlevel=0.82).grid(row=0, column=6, sticky='nesw')
+                     barlevel=0.6).grid(row=0, column=2, sticky='nesw')
+              
+              Button(master=self.bottom,
+                     text='PERFORM',
+                     type='BIG',
+                     fct=self.body.drawMoveFrame,
+                     frame=self.body,
+                     bar=self.botbar,
+                     barlevel=0.82).grid(row=0, column=3, sticky='nesw')
               
               Button(master=self.bottom,
                      text='',
                      type='IMG',
                      img='UI/Assets/folder.png',
-                     fct=AppState.open_folder).grid(row=0, column=7, sticky='nesw')
+                     fct=AppState.open_folder).grid(row=0, column=4, sticky='nesw')
               
               Button(master=self.bottom,
                      text='',
                      type='IMG',
                      img='UI/Assets/settings.png',
-                     fct=AppState.open_github).grid(row=0, column=8, sticky='nesw')
+                     fct=AppState.open_github).grid(row=0, column=5, sticky='nesw')
               
              
        async def mainloop(self, *args, **kwargs):

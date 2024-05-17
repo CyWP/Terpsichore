@@ -42,8 +42,7 @@ class Trainer:
         
         except (Exception) as e:
             AppState.train_log(e)
-            print(e)
-            traceback.print_exc()
+            time.sleep(1)#to let time for frame to get all logs
             AppState.end_train()
 
     @classmethod

@@ -3,15 +3,23 @@ from os import path, remove, listdir, mkdir
 import time
 import copy
 import shutil
+import tarfile
+from terpsexception import TerpsException
 
 class Model():
 
-    def __init__(self, dirpath, name, new:bool):
+    def __init__(self, dirpath, name, new:bool, tarpath=None):
         self.gestures = {}
+        if tarpath is not None:
+            if tarpath[-7:] != '.tar.gz':
+                raise TerpsException('Error: Improper file type imported, must be tarball (.tar.gz).')
+            with tarfile.open(dirpath, 'r:gz') as tar:
+                tar.extractall(path=dirpath)
         self.root = dirpath
         self.path = path.join(dirpath, name)
         self.info_path = path.join(self.path, 'info.json')
-        self.checkpoint = path.join(self.path, 'checkpoint')
+        self.ckptname = 'checkpoint'
+        self.checkpoint = path.join(self.path, self.ckptname)
         self.name = name
         self.active_gesture = None
 
@@ -26,8 +34,7 @@ class Model():
                 self.info = json.load(f)
         except:
             self.info = Model.default_info()
-        for gesture in listdir(self.path):
-            if path.isdir(path.join(self.path, gesture)):
+        for gesture in self.get_gesture_names():
                 self.gestures[gesture] = Gesture(path.join(self.path, gesture), new=False)
         if len(self.gestures.keys()):
             self.select_gesture(list(self.gestures.keys())[0])
@@ -36,8 +43,12 @@ class Model():
         self.info = Model.default_info()
         try:
             mkdir(self.path)
-        except:
-            pass
+        except Exception as e:
+            raise TerpsException(f'Error occured while creating Model: {str(e)}')
+        
+    def export(self, dirpath):
+        with tarfile.open(path.join(dirpath, f'{self.name}.tar.gz'), 'w:gz') as tar:
+            tar.add(self.path)
 
     def add_gesture(self, name):
         if not path.exists(path.join(self.path, name)):
@@ -51,8 +62,8 @@ class Model():
             if self.active_gesture == name:
                 if len(self.gestures.keys()):
                     self.select_gesture(list(self.gestures.keys())[0])
-        except:
-            pass
+        except Exception as e:
+            raise TerpsException(f"An error occured while deleting the model: {str(e)}")
 
     def select_gesture(self, name):
         if name in self.gestures.keys():
@@ -69,6 +80,9 @@ class Model():
     
     def gesture_space(self):
         return f'{sum([gesture.get_space() for name, gesture in self.gestures.items()])/1000}kB'
+    
+    def get_gesture_names(self):
+        return [gesture for gesture in listdir(self.path) if gesture!=self.ckptname and path.isdir(path.join(self.path, gesture))]
     
     @classmethod
     def default_info(_cls):
