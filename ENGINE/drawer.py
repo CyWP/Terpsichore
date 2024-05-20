@@ -6,20 +6,21 @@ import numpy as np
 import time
 import copy
 
+
 class VoidDrawer:
     """
     A drawer class that performs no drawing.
     """
 
-    def __init__(self, cap: cv2.VideoCapture, size:tuple):
+    def __init__(self, cap: cv2.VideoCapture, size: tuple):
         """
         Initializes the VoidDrawer.
 
         Args:
             cap (cv2.VideoCapture): VideoCapture object for capturing frames.
         """
-        self.use_webcam = AppState.get_attr('webcam_active')
-        self.delay = AppState.get_attr('delay')
+        self.use_webcam = AppState.get_attr("webcam_active")
+        self.delay = AppState.get_attr("delay")
         self.cap = cap
         self.size = size
         self.win_name = MoveNet.WINDOW_NAME.value
@@ -67,23 +68,33 @@ class VoidDrawer:
         timer_index = Timer.add_timer(duration=self.delay, action=Actions.POP)
         ret, frame = self.cap.read()  # Read a new frame
         baseframe = cv2.resize(copy.deepcopy(frame), self.size)
-        
+
         while not Timer.is_done(timer_index):
             if ret:
                 if self.use_webcam:
                     ret, frame = self.cap.read()
                     frame = cv2.resize(frame, self.size)
                 else:
-                    #We want to keep displaying the same first frame if the input is video
+                    # We want to keep displaying the same first frame if the input is video
                     frame = copy.deepcopy(baseframe)
                 remaining_time = max(0, self.delay - time.time() + timer_start)
-                text = f'{remaining_time:.2f}s'  # Format remaining time
-                cv2.putText(frame, text, self.font_loc, self.font, self.font_scale, self.font_color, self.line_thick, cv2.LINE_4)
+                text = f"{remaining_time:.2f}s"  # Format remaining time
+                cv2.putText(
+                    frame,
+                    text,
+                    self.font_loc,
+                    self.font,
+                    self.font_scale,
+                    self.font_color,
+                    self.line_thick,
+                    cv2.LINE_4,
+                )
                 cv2.imshow(self.win_name, frame)
-                if cv2.waitKey(10) & 0xFF == ord('q'):
+                if cv2.waitKey(10) & 0xFF == ord("q"):
                     break  # Break the loop if 'q' is pressed
             else:
                 break  # Break the loop if there's an issue reading frames
+
 
 class FrameDrawer(VoidDrawer):
     """
@@ -100,11 +111,13 @@ class FrameDrawer(VoidDrawer):
         """
         cv2.imshow(self.win_name, self.output(cv2.resize(frame, self.size), points))
 
+
 class KPDrawer(FrameDrawer):
     """
     Drawer class for drawing keypoints on frames.
     """
-    def __init__(self, cap:cv2.VideoCapture, size:tuple):
+
+    def __init__(self, cap: cv2.VideoCapture, size: tuple):
         super().__init__(cap, size)
         self.edges = MoveNet.EDGES.value
 
@@ -130,6 +143,7 @@ class KPDrawer(FrameDrawer):
             cv2.line(frame, (x1, y1), (x2, y2), self.pose_color, self.line_thick)
         return frame
 
+
 def get_drawer(cap: cv2.VideoCapture, size: tuple):
     """
     Factory function to get the appropriate drawer based on the application state.
@@ -141,9 +155,9 @@ def get_drawer(cap: cv2.VideoCapture, size: tuple):
         Drawer: An instance of the appropriate drawer.
     """
 
-    if not AppState.get_attr('show'):
+    if not AppState.get_attr("show"):
         return VoidDrawer(cap, size)
-    if AppState.get_attr('show_pose'):
+    if AppState.get_attr("show_pose"):
         return KPDrawer(cap, size)
     else:
         return FrameDrawer(cap, size)

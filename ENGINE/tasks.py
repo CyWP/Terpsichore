@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Tasks(Enum):
-    RECORD = 'record'
-    PERFORM = 'perform'
+    RECORD = "record"
+    PERFORM = "perform"

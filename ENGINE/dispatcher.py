@@ -3,6 +3,7 @@ import csv
 from pythonosc.udp_client import SimpleUDPClient
 from .tasks import Tasks
 
+
 class Dispatcher:
     """
     Base class for dispatchers.
@@ -16,6 +17,7 @@ class Dispatcher:
 
     def close(self):
         pass
+
 
 class CSVWriter(Dispatcher):
     """
@@ -37,9 +39,10 @@ class CSVWriter(Dispatcher):
             err: Defines if function was called because of error.
         """
         if not err:
-            with open(self.outfile, 'w', newline='') as csvfile:
+            with open(self.outfile, "w", newline="") as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerows(self.data)
+
 
 class OSCClient(Dispatcher):
     """
@@ -48,37 +51,40 @@ class OSCClient(Dispatcher):
 
     def __init__(self):
 
-        ip = AppState.get_attr('osc_ip')
-        port = AppState.get_attr('osc_port')
-        self.address = AppState.get_attr('osc_address')
+        ip = AppState.get_attr("osc_ip")
+        port = AppState.get_attr("osc_port")
+        self.address = AppState.get_attr("osc_address")
         self.client = SimpleUDPClient(ip, port)
 
     def start(self):
-        self.client.send_message(address=f'{self.address}/start', value=True)
+        self.client.send_message(address=f"{self.address}/start", value=True)
 
     def dispatch(self, mvmt, pose, gesture, exts):
 
-        self.client.send_message(address=f'{self.address}/mvmt', value=mvmt.tolist())
-        self.client.send_message(address=f'{self.address}/pose', value=pose.tolist())
-        self.client.send_message(address=f'{self.address}/class', value=gesture.tolist())
-        self.client.send_message(address=f'{self.address}/exts', value=exts.tolist())
+        self.client.send_message(address=f"{self.address}/mvmt", value=mvmt.tolist())
+        self.client.send_message(address=f"{self.address}/pose", value=pose.tolist())
+        self.client.send_message(
+            address=f"{self.address}/class", value=gesture.tolist()
+        )
+        self.client.send_message(address=f"{self.address}/exts", value=exts.tolist())
 
     def close(self, err=False):
         """
         Closes the OSCClient dispatcher by sending a completion message.
         """
-        self.client.send_message(address=f'{self.address}/done', value=True)
+        self.client.send_message(address=f"{self.address}/done", value=True)
+
 
 def get_dispatcher(task: str):
     """
     Factory function to get the appropriate dispatcher based on the task.
-    
+
     Args:
         task (str): Task type, either 'perform' or 'record'.
-    
+
     Returns:
         Dispatcher: An instance of the appropriate dispatcher.
-    
+
     Raises:
         ValueError: If the task type is invalid.
     """
@@ -87,4 +93,4 @@ def get_dispatcher(task: str):
     elif task == Tasks.RECORD:
         return CSVWriter()
     else:
-        raise ValueError(f'Invalid task type: {task}')
+        raise ValueError(f"Invalid task type: {task}")

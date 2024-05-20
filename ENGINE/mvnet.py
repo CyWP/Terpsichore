@@ -3,9 +3,10 @@ from enum import Enum
 from screeninfo import get_monitors
 from os import path
 
+
 class MoveNet(Enum):
 
-        EDGES = (
+    EDGES = (
         (0, 1),
         (0, 2),
         (1, 3),
@@ -24,55 +25,56 @@ class MoveNet(Enum):
         (13, 15),
         (12, 14),
         (14, 16),
-        )
-    
-        KEYPOINTS = {
-        'nose': 0,
-        'left_eye': 1,
-        'right_eye': 2,
-        'left_ear': 3,
-        'right_ear': 4,
-        'left_shoulder': 5,
-        'right_shoulder': 6,
-        'left_elbow': 7,
-        'right_elbow': 8,
-        'left_wrist': 9,
-        'right_wrist': 10,
-        'left_hip': 11,
-        'right_hip': 12,
-        'left_knee': 13,
-        'right_knee': 14,
-        'left_ankle': 15,
-        'right_ankle': 16}
+    )
 
-        MODELPATH = path.abspath('DATA/mvnet.tflite')
+    KEYPOINTS = {
+        "nose": 0,
+        "left_eye": 1,
+        "right_eye": 2,
+        "left_ear": 3,
+        "right_ear": 4,
+        "left_shoulder": 5,
+        "right_shoulder": 6,
+        "left_elbow": 7,
+        "right_elbow": 8,
+        "left_wrist": 9,
+        "right_wrist": 10,
+        "left_hip": 11,
+        "right_hip": 12,
+        "left_knee": 13,
+        "right_knee": 14,
+        "left_ankle": 15,
+        "right_ankle": 16,
+    }
 
-        INPUT_SIZE = 34
+    MODELPATH = path.abspath("DATA/mvnet.tflite")
 
-        NUM_POINTS = 17
+    INPUT_SIZE = 34
 
-        POSE_COLOR = (0, 255, 0)
+    NUM_POINTS = 17
 
-        LINE_THICKNESS = 2
+    POSE_COLOR = (0, 255, 0)
 
-        FONT = cv2.FONT_HERSHEY_SIMPLEX
+    LINE_THICKNESS = 2
 
-        FONT_COLOR = (255, 255, 0)
+    FONT = cv2.FONT_HERSHEY_SIMPLEX
 
-        FONT_SCALE = 3
+    FONT_COLOR = (255, 255, 0)
 
-        FONT_LOCATION = (50, 100)
+    FONT_SCALE = 3
 
-        INFERENCE_X = 192
+    FONT_LOCATION = (50, 100)
 
-        INFERENCE_Y = 192
+    INFERENCE_X = 192
 
-        EXIT_KEY = 'q'
+    INFERENCE_Y = 192
 
-        WINDOW_NAME = f'Terpsichore: press {EXIT_KEY} to Exit'
+    EXIT_KEY = "q"
 
-        TEMPORAL_AXIS_SIZE = 17
+    WINDOW_NAME = f"Terpsichore: press {EXIT_KEY} to Exit"
 
-        SCREEN_X = get_monitors()[0].width
+    TEMPORAL_AXIS_SIZE = 17
 
-        SCREEN_Y = get_monitors()[0].height
+    SCREEN_X = get_monitors()[0].width
+
+    SCREEN_Y = get_monitors()[0].height
