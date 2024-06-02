@@ -1,4 +1,4 @@
-from customtkinter import CTkFrame, StringVar, IntVar, BooleanVar, DoubleVar, filedialog
+from customtkinter import CTkFrame, StringVar, BooleanVar, DoubleVar, filedialog
 from .customclasses import (
     Button,
     CheckBox,
@@ -37,12 +37,13 @@ class ConsciousFrame(CTkFrame):
         self.osc_port = StringVar(self, value=AppState.get_attr("osc_port"))
         self.osc_address = StringVar(self, value=AppState.get_attr("osc_address"))
         self.listen_port = StringVar(self, value=AppState.get_attr("listen_port"))
-        self.max_freq = StringVar(self, value=AppState.get_attr("max_frequency"))
         self.input_duration = StringVar(self, value=AppState.get_attr("duration"))
         self.webcam_active = BooleanVar(self, value=AppState.get_attr("webcam_active"))
         self.webcam_index = StringVar(self, value=AppState.get_attr("webcam_index"))
         self.train_epochs = StringVar(self, value=AppState.get_attr("epochs"))
-        self.target_loss = StringVar(self, value=AppState.get_attr("target_loss"))
+        self.learn_rate = DoubleVar(self, value=AppState.get_attr("learn_rate"))
+        self.temporal_size = StringVar(self, value=AppState.get_attr("temporal_size"))
+        self.batch_size = StringVar(self, value=AppState.get_attr("batch_size"))
         self.test_split = DoubleVar(self, value=AppState.get_attr("test_split"))
         self.x_loc = DoubleVar(self, value=AppState.get_attr("x_loc"))
         self.y_loc = DoubleVar(self, value=AppState.get_attr("y_loc"))
@@ -81,10 +82,13 @@ class ConsciousFrame(CTkFrame):
         self.webcam_index_entry = Entry(
             self.input_settings_frame, width=36, textvariable=self.webcam_index
         )
-        self.classification_output_select = ComboBox(
+        self.batch_size_entry = Entry(
+            self.right, width=54, textvariable=self.batch_size
+        )
+        self.learn_rate_select = ComboBox(
             self.right,
-            values=AppState._classification_outputs,
-            variable=self.classification_output,
+            values=[str(val) for val in AppState._learn_rates],
+            variable=self.learn_rate,
         )
         self.custom_size = CheckBox(self.right, text="Custom Window Size")
         self.send_pose_data = CheckBox(self.right, text="Send Pose Data")
@@ -116,11 +120,12 @@ class ConsciousFrame(CTkFrame):
         self.osc_port_entry.grid(row=0, column=3, sticky="w")
         self.osc_address_entry.grid(row=0, column=4, sticky="w")
 
-        self.max_freq_entry = Entry(self.right, width=36, textvariable=self.max_freq)
         self.train_epochs_entry = Entry(
-            self.right, width=36, textvariable=self.train_epochs
+            self.right, width=54, textvariable=self.train_epochs
         )
-        self.target_loss_entry = Entry(self.right, textvariable=self.target_loss)
+        self.temporal_size_entry = Entry(
+            self.right, width=54, textvariable=self.temporal_size
+        )
         self.test_split_label = Label(self.right, text=f"{self.test_split.get():.1f}%")
         self.x_loc_label = Label(self.right, text=f"{self.x_loc.get():.1f}%")
         self.y_loc_label = Label(self.right, text=f"{self.y_loc.get():.1f}%")
@@ -552,9 +557,23 @@ class ConsciousFrame(CTkFrame):
             self.display_input.grid(row=row, column=1, columnspan=1, sticky="e")
             if AppState.get_attr("show") != self.display_input.get():
                 self.display_input.toggle()
-            self.display_pose.grid(row=row, column=3, columnspan=1, sticky="w")
+            self.display_pose.grid(row=row, column=3, columnspan=1, sticky="")
             if AppState.get_attr("show_pose") != self.display_pose.get():
                 self.display_pose.toggle()
+            row += 1
+
+            Label(right, text="Momentum").grid(row=row, column=0, sticky="w")
+            self.momentum_label.grid(row=row, column=3, columnspan=1, sticky="e")
+            self.momentum_slider.grid(
+                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
+            )
+            row += 1
+
+            Label(right, text="CT").grid(row=row, column=0, sticky="w")
+            self.conf_threshold_label.grid(row=row, column=3, columnspan=1, sticky="e")
+            self.conf_threshold_slider.grid(
+                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
+            )
             row += 1
 
             self.new_gesture_entry.grid(
@@ -585,13 +604,31 @@ class ConsciousFrame(CTkFrame):
             Button(left, type="BIG", text="STOP").pack(anchor="sw", side="bottom")
             right = self.right
             self.train_img.pack(side="top", anchor="n", fill="y")
-
+            Button(left, type="BIG", text="CANCEL").pack(anchor="sw", side="bottom")
+            right = self.right
+            self.train_img.pack(side="top", anchor="n", fill="y")
             row = 0
 
             Label(right, text="Epochs").grid(
-                row=row, column=0, columnspan=1, sticky="w"
+                row=row, column=0, sticky="w"
             )
             self.train_epochs_entry.grid(row=row, column=1, sticky="w")
+            Label(right, text="Batch Size").grid(row=row, column=2, sticky="w")
+            self.batch_size_entry.grid(row=row, column=3, sticky="w")
+            row += 1
+
+            Label(right, text="Learning Rate").grid(
+                row=row, column=0, sticky=""
+            )
+            self.learn_rate_select.grid(
+                row=row, column=1, sticky="w"
+            )
+            Label(right, text="Temporal Size").grid(
+                row=row, column=2, sticky=""
+            )
+            self.temporal_size_entry.grid(
+                row=row, column=3, sticky="w"
+            )
             row += 1
 
             Label(right, text="Test Split").grid(
@@ -623,12 +660,11 @@ class ConsciousFrame(CTkFrame):
             "show_pose": self.display_pose.get(),
             "osc_port": int(self.osc_port.get()),
             "listen_port": int(self.listen_port.get()),
-            "max_frequency": int(self.max_freq.get()),
             "epochs": int(self.train_epochs.get()),
-            "target_loss": float(self.target_loss.get()),
             "test_split": float(self.test_split.get()),
-            "cuda": self.use_cuda.get(),
-            "regularization": self.use_regularization.get(),
+            "batch_size": int(self.batch_size.get()),
+            "temporal_size": int(self.temporal_size.get()),
+            "learn_rate": float(self.learn_rate.get()),
             "conf_threshold": self.conf_threshold.get(),
             "momentum": self.momentum.get(),
             "custom_size": self.custom_size.get(),
@@ -644,12 +680,14 @@ class ConsciousFrame(CTkFrame):
         self.video_path.set(AppState.get_attr("video_path"))
         self.osc_port.set(AppState.get_attr("osc_port"))
         self.listen_port.set(AppState.get_attr("listen_port"))
-        self.max_freq.set(AppState.get_attr("max_frequency"))
         self.input_duration.set(AppState.get_attr("duration"))
         self.webcam_active.set(AppState.get_attr("webcam_active"))
         self.webcam_index.set(AppState.get_attr("webcam_index"))
         self.classification_output.set(AppState.get_attr("class_output"))
         self.test_split.set(AppState.get_attr("test_split"))
+        self.temporal_size.set(AppState.get_attr("temporal_size"))
+        self.batch_size.set(AppState.get_attr("batch_size"))
+        self.learn_rate.set(AppState.get_attr("learn_rate"))
         self.display_input.set(AppState.get_attr("show"))
         self.display_pose.set(AppState.get_attr("show_pose"))
         self.send_pose_data.set(AppState.get_attr("send_pose"))
@@ -662,7 +700,6 @@ class ConsciousFrame(CTkFrame):
         self.y_size.set(AppState.get_attr("y_size"))
         self.use_cuda.set(AppState.get_Attr("cuda"))
         self.use_regularization.set(AppState.get_attr("regularization"))
-        self.target_loss.set(AppState.get_attr("target_loss"))
         self.train_epochs.set(AppState.get_attr("epochs"))
 
     def add_gesture(self):

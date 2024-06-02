@@ -73,8 +73,7 @@ class ConverterClassifier(Converter):
                 AppState.get_model_checkpoint()
             )
         except Exception as e:
-            traceback.print_exc()
-            raise TerpsException(f"Error: no model has been trained.")
+            raise TerpsException(f"Error: no model has been trained. {str(e)}")
 
         self.class_input = np.zeros(self.classifier.input_shape[1:])
 
@@ -112,7 +111,7 @@ class ConverterClassifier(Converter):
         super().compute_output(keypoints_with_scores)
 
         self.class_input = np.concatenate(
-            [self.class_input, self.mvmt.ravel()[np.newaxis, :]]
+            [self.class_input, self.mvmt.ravel()[np.newaxis, :, np.newaxis]]
         )[1:, :]
 
         self.class_output = self.classifier.call(

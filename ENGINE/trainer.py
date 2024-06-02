@@ -1,12 +1,9 @@
 from appstate import AppState
 from os import path, listdir
 import numpy as np
-from .mvnet import MoveNet
 import tensorflow as tf
 import time
-from keras.utils import to_categorical
 from .classifier import get_classifier
-import traceback
 import threading
 from sklearn.model_selection import train_test_split
 
@@ -26,16 +23,21 @@ class Trainer:
 
             weights_path = AppState.get_model_checkpoint()
             test_split = AppState.get_attr("test_split") / 100
+            temporal_size = AppState.get_attr("temporal_size")
 
-            X, y, label_map = cls.preprocess()
+            X_trn, y_trn, X_val, y_val, label_map = cls.preprocess(test_split, temporal_size)
 
             model = get_classifier()
 
-            model.train(X, y)
+            model.train(X_trn, y_trn, X_val, y_val)
 
-            model.save(filepath=weights_path)
+            if not AppState._abort_training:
+                model.save(filepath=weights_path)
 
             AppState.update_model(label_map)
+
+            #Reset values
+            AppState.reset_training()
 
             time.sleep(1)  # to let time for frame to get all logs
 
@@ -47,14 +49,12 @@ class Trainer:
             AppState.end_train()
 
     @classmethod
-    def preprocess(cls):
+    def preprocess(cls, test_split, temporal_size):
 
         AppState.train_log("Initiated data preprocessing")
         # simply an array of gesture names, with the index being its corresponding label value(int, not one-hot encoded)
         gesture_names = []
         label_map = {}
-
-        temporal_size = MoveNet.TEMPORAL_AXIS_SIZE.value
 
         X = []
         y = []
@@ -80,9 +80,15 @@ class Trainer:
                     X.append(recs[i : i + temporal_size, :])
                     y.append(label)
 
-        X = tf.convert_to_tensor(X)
-        y = tf.convert_to_tensor(y)
+        X = np.expand_dims(np.array(X), -1)
+        y = np.expand_dims(np.array(y), -1)
 
-        AppState.train_log("Preprocessing Complete")
-
-        return X, y, label_map
+        if test_split > 0.0:
+            AppState.train_log("Splitting datasets")
+            X_trn, X_val, y_trn, y_val = train_test_split(X, y, test_size=test_split)
+            print(X_trn.shape)
+            AppState.train_log("Preprocessing Complete")
+            return tf.convert_to_tensor(X_trn), tf.convert_to_tensor(y_trn), tf.convert_to_tensor(X_val), tf.convert_to_tensor(y_val), label_map
+        else:
+            AppState.train_log("Preprocessing Complete")
+            return tf.convert_to_tensor(X), tf.convert_to_tensor(y), None, None, label_map

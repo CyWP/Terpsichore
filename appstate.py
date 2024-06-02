@@ -6,8 +6,6 @@ import shutil
 from model import Model
 from terpsexception import TerpsException
 from customtkinter import filedialog
-import asyncio
-
 
 class AppState:
     _state_file = None
@@ -18,177 +16,179 @@ class AppState:
     _state = None
     _training = False
     _training_logs = []
+    _stop_training = False
+    _abort_training = False
     _file_records = []
     _abort_engine = False
-    _classification_outputs = ["Integer", "Softmax", "One Hot"]
+    _learn_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
 
     @classmethod
-    def set_root(_cls, filepath):
-        _cls._root = filepath
+    def set_root(cls, filepath):
+        cls._root = filepath
         if not path.exists(filepath):
             makedirs(filepath)
-        _cls._models_dir = path.join(filepath, "Models")
-        if not path.exists(_cls._models_dir):
-            makedirs(_cls._models_dir)
-        _cls._del_dir = path.join(filepath, "Deleted")
-        if not path.exists(_cls._del_dir):
-            makedirs(_cls._del_dir)
+        cls._models_dir = path.join(filepath, "Models")
+        if not path.exists(cls._models_dir):
+            makedirs(cls._models_dir)
+        cls._del_dir = path.join(filepath, "Deleted")
+        if not path.exists(cls._del_dir):
+            makedirs(cls._del_dir)
 
     @classmethod
-    def load_state(_cls, filepath):
-        _cls._state_file = filepath
-        if not path.exists(_cls._state_file):
-            _cls.default_state()
+    def load_state(cls, filepath):
+        cls._state_file = filepath
+        if not path.exists(cls._state_file):
+            cls.default_state()
         else:
             with open(filepath, "r") as f:
-                _cls._state_dict = json.load(f)
-        _cls.set_root(_cls._state_dict["data"])
-        _cls.load_last_model()
+                cls._state_dict = json.load(f)
+        cls.set_root(cls._state_dict["data"])
+        cls.load_last_model()
 
     @classmethod
-    def close(_cls):
-        _cls.save_ui_state()
-        _cls.clear_deleted()
+    def close(cls):
+        cls.save_ui_state()
+        cls.clear_deleted()
 
     @classmethod
-    def start_engine(_cls):
-        _cls.abort_engine = False
+    def start_engine(cls):
+        cls.abort_engine = False
 
     @classmethod
-    def abort_engine(_cls):
-        _cls._abort_engine = True
+    def abort_engine(cls):
+        cls._abort_engine = True
 
     @classmethod
-    def engine_aborted(_cls):
-        ret = _cls._abort_engine
-        _cls._abort_engine = False
+    def engine_aborted(cls):
+        ret = cls._abort_engine
+        cls._abort_engine = False
         return ret
 
     @classmethod
-    def check_active_model(_cls):
-        if _cls._active_model is None or _cls._state_dict["active_model"] is None:
+    def check_active_model(cls):
+        if cls._active_model is None or cls._state_dict["active_model"] is None:
             raise TerpsException("Error: no model currently active/selected.")
 
     @classmethod
-    def active_model(_cls):
-        _cls.check_active_model()
-        return _cls._state_dict["active_model"]
+    def active_model(cls):
+        cls.check_active_model()
+        return cls._state_dict["active_model"]
 
     @classmethod
-    def save_ui_state(_cls):
-        with open(_cls._state_file, "w") as f:
-            json.dump(_cls._state_dict, f, indent=4)
+    def save_ui_state(cls):
+        with open(cls._state_file, "w") as f:
+            json.dump(cls._state_dict, f, indent=4)
 
     @classmethod
-    def clear_deleted(_cls):
-        shutil.rmtree(_cls._del_dir)
+    def clear_deleted(cls):
+        shutil.rmtree(cls._del_dir)
 
     @classmethod
-    def get_models(_cls):
+    def get_models(cls):
         return [
             name
-            for name in listdir(_cls._models_dir)
-            if path.isdir(path.join(_cls._models_dir, name))
+            for name in listdir(cls._models_dir)
+            if path.isdir(path.join(cls._models_dir, name))
         ]
 
     @classmethod
-    def active_model_info(_cls):
-        if _cls._active_model is not None:
-            return _cls._active_model.get_info()
+    def active_model_info(cls):
+        if cls._active_model is not None:
+            return cls._active_model.get_info()
         else:
             return None
 
     @classmethod
-    def load_model(_cls, name: str):
-        if name in _cls.get_models():
-            _cls._active_model = Model(_cls._models_dir, name, new=False)
-            _cls._state_dict["active_model"] = name
+    def load_model(cls, name: str):
+        if name in cls.get_models():
+            cls._active_model = Model(cls._models_dir, name, new=False)
+            cls._state_dict["active_model"] = name
 
     @classmethod
-    def load_last_model(_cls):
-        if _cls._state_dict["active_model"] in _cls.get_models():
-            _cls.load_model(_cls._state_dict["active_model"])
+    def load_last_model(cls):
+        if cls._state_dict["active_model"] in cls.get_models():
+            cls.load_model(cls._state_dict["active_model"])
         else:
-            _cls._state_dict["active_model"] = None
+            cls._state_dict["active_model"] = None
 
     @classmethod
-    def get_model_checkpoint(_cls):
-        if _cls._active_model is not None:
-            return _cls._active_model.get_checkpoint_path()
+    def get_model_checkpoint(cls):
+        if cls._active_model is not None:
+            return cls._active_model.get_checkpoint_path()
 
     @classmethod
-    def get_model_dir(_cls):
-        if _cls._active_model is not None:
-            return _cls._active_model.path
+    def get_model_dir(cls):
+        if cls._active_model is not None:
+            return cls._active_model.path
 
     @classmethod
-    def get_gesture_paths(_cls):
-        if _cls._active_model is not None:
-            return _cls._active_model.gesture_paths()
+    def get_gesture_paths(cls):
+        if cls._active_model is not None:
+            return cls._active_model.gesture_paths()
 
     @classmethod
-    def get_num_classes(_cls):
-        if _cls._active_model is not None:
-            return _cls._active_model.num_gestures()
+    def get_num_classes(cls):
+        if cls._active_model is not None:
+            return cls._active_model.num_gestures()
 
     @classmethod
-    def save_model(_cls):
-        _cls._active_model.save()
+    def save_model(cls):
+        cls._active_model.save()
 
     @classmethod
-    def save_model_as(_cls, name: str):
-        if name not in _cls._models.keys():
-            _cls._active_model.save_as(name)
+    def save_model_as(cls, name: str):
+        if name not in cls._models.keys():
+            cls._active_model.save_as(name)
 
     @classmethod
-    def new_model(_cls, name: str):
-        if name not in _cls.get_models():
-            _cls._active_model = Model(_cls._models_dir, name, new=True)
-            _cls._state_dict["active_model"] = name
+    def new_model(cls, name: str):
+        if name not in cls.get_models():
+            cls._active_model = Model(cls._models_dir, name, new=True)
+            cls._state_dict["active_model"] = name
         else:
-            _cls.load_model(name)
+            cls.load_model(name)
             raise TerpsException(f"Model {name} already exists and was loaded instead.")
 
     @classmethod
-    def delete_model(_cls, name=None):
+    def delete_model(cls, name=None):
 
-        if name not in _cls.get_models():
+        if name not in cls.get_models():
             raise TerpsException(f"Error: {name} is not an existing model name.")
-        _cls.load_model(name)
-        model = _cls._active_model
+        cls.load_model(name)
+        model = cls._active_model
         shutil.move(
-            model.path, path.join(_cls._del_dir, _cls._state_dict["active_model"])
+            model.path, path.join(cls._del_dir, cls._state_dict["active_model"])
         )
-        if len(_cls.get_models()) > 0:
-            _cls.load_model(_cls.get_models()[-1])
+        if len(cls.get_models()) > 0:
+            cls.load_model(cls.get_models()[-1])
         else:
-            _cls._active_model = None
-            _cls._state_dict["active_model"] = None
+            cls._active_model = None
+            cls._state_dict["active_model"] = None
 
     @classmethod
-    def export_model(_cls):
-        _cls.check_active_model()
+    def export_model(cls):
+        cls.check_active_model()
         dirpath = filedialog.askdirectory(
             initialdir="/", title="Select Folder", mustexist=True
         )
-        _cls.active_model().export(dirpath)
+        cls.active_model().export(dirpath)
 
     @classmethod
-    def import_model(_cls):
+    def import_model(cls):
         filename = filedialog.askopenfilename(
             defaultextension=".tar.gz", initialdir="/"
         )
         name = filename[:-7]
-        if name not in _cls.get_models():
+        if name not in cls.get_models():
             try:
-                _cls._active_model = Model(
-                    _cls._models_dir, name, new=True, tarpath=filename
+                cls._active_model = Model(
+                    cls._models_dir, name, new=True, tarpath=filename
                 )
             except Exception as e:
                 raise TerpsException(
                     f"An error occured while loading {filename}, imported file might be invalid: {str(e)}"
                 )
-            _cls._state_dict["active_model"] = name
+            cls._state_dict["active_model"] = name
         else:
             # Should probably add some error handling for if folder is created but not model object.
             raise TerpsException(
@@ -196,138 +196,145 @@ class AppState:
             )
 
     @classmethod
-    def restore_deleted(_cls):
-        dirs = listdir(_cls._del_dir)
+    def restore_deleted(cls):
+        dirs = listdir(cls._del_dir)
         if len(dirs) > 0:
             for dir in dirs:
                 shutil.move(
-                    path.join(_cls._del_dir, dir), path.join(_cls._models_dir, dir)
+                    path.join(cls._del_dir, dir), path.join(cls._models_dir, dir)
                 )
-            _cls.load_model(dirs[-1])
+            cls.load_model(dirs[-1])
         else:
             raise TerpsException("Error: No model to restore.")
 
     @classmethod
-    def copy_model(_cls, name):
+    def copy_model(cls, name):
         if (
-            None not in (_cls._active_model, _cls._state_dict["active_model"])
+            None not in (cls._active_model, cls._state_dict["active_model"])
             and name != ""
         ):
-            shutil.copytree(_cls._active_model.path, path.join(_cls._models_dir, name))
-            _cls.load_model(name)
+            shutil.copytree(cls._active_model.path, path.join(cls._models_dir, name))
+            cls.load_model(name)
 
     @classmethod
-    def new_gesture(_cls, name: str):
-        if _cls._active_model is not None:
-            _cls._active_model.add_gesture(name)
+    def new_gesture(cls, name: str):
+        if cls._active_model is not None:
+            cls._active_model.add_gesture(name)
 
     @classmethod
-    def remove_gesture(_cls, name: str):
-        if _cls._active_model is not None:
-            _cls._active_model.remove_gesture(name)
+    def remove_gesture(cls, name: str):
+        if cls._active_model is not None:
+            cls._active_model.remove_gesture(name)
 
     @classmethod
-    def select_gesture(_cls, name: str):
-        if _cls._active_model is not None:
-            if _cls._active_model.select_gesture(name):
-                _cls._state_dict["active_gesture"] = name
+    def select_gesture(cls, name: str):
+        if cls._active_model is not None:
+            if cls._active_model.select_gesture(name):
+                cls._state_dict["active_gesture"] = name
 
     @classmethod
-    def get_gestures(_cls):
+    def get_gestures(cls):
         try:
-            ret = _cls._active_model.get_gestures()
+            ret = cls._active_model.get_gestures()
         except:
             ret = []
         return ret
 
     @classmethod
-    def get_active_gesture(_cls):
-        if _cls._active_model is not None:
-            return _cls._active_model.active_gesture
+    def get_active_gesture(cls):
+        if cls._active_model is not None:
+            return cls._active_model.active_gesture
         return ""
 
     @classmethod
-    def set_ui_state(_cls, dict):
-        _cls._state_dict.update(dict)
+    def set_ui_state(cls, dict):
+        cls._state_dict.update(dict)
 
     @classmethod
-    def update_state(_cls, state: dict):
-        _cls._state_dict.update(state)
+    def update_state(cls, state: dict):
+        cls._state_dict.update(state)
 
     @classmethod
-    def get_attr(_cls, attr: str):
+    def get_attr(cls, attr: str):
         try:
-            return _cls._state_dict[attr]
+            return cls._state_dict[attr]
         except:
             raise TerpsException(f"Attribute {attr} invalid or uninitialized.")
 
     @classmethod
-    def get_csv_file(_cls):
-        if _cls._active_model is not None:
-            rec = _cls._active_model.get_csv_file()
-            _cls._file_records.append(rec)
+    def get_csv_file(cls):
+        if cls._active_model is not None:
+            rec = cls._active_model.get_csv_file()
+            cls._file_records.append(rec)
             return rec
 
     @classmethod
-    def undo_last_rec(_cls):
-        if len(_cls._file_records):
-            remove(_cls._file_records.pop())
+    def undo_last_rec(cls):
+        if len(cls._file_records):
+            remove(cls._file_records.pop())
 
     @classmethod
-    def start_train(_cls):
-        _cls._training = True
+    def start_train(cls):
+        cls._training = True
 
     @classmethod
-    def end_train(_cls):
-        _cls._training = False
+    def end_train(cls):
+        cls._training = False
 
     @classmethod
-    def train_log(_cls, log):
+    def train_log(cls, log):
         print(log)
-        _cls._training_logs.append(log)
+        cls._training_logs.append(log)
 
     @classmethod
-    def get_trained_info(_cls):
-        if _cls._active_model is not None:
-            return _cls._active_model.get_training_info()
+    def get_trained_info(cls):
+        if cls._active_model is not None:
+            return cls._active_model.get_training_info()
 
     @classmethod
-    def get_train_logs(_cls):
-        temp = _cls._training_logs
-        _cls._training_logs = []
+    def get_train_logs(cls):
+        temp = cls._training_logs
+        cls._training_logs = []
         return temp
 
     @classmethod
-    def is_trained(_cls):
-        if _cls._active_model is not None:
-            return _cls._active_model.is_trained()
+    def is_trained(cls):
+        if cls._active_model is not None:
+            return cls._active_model.is_trained()
         return False
+    
+    @classmethod
+    def reset_training(cls):
+        cls._training = False
+        cls._training_logs = []
+        cls._stop_training = False
+        cls._abort_training = False
 
     @classmethod
-    def update_model(_cls, label_map: dict):
-        if _cls._active_model is not None:
-            _cls._active_model.update_model_info(label_map)
+    def update_model(cls, label_map: dict):
+        if cls._active_model is not None:
+            cls._active_model.update_model_info(label_map)
 
     @classmethod
-    def open_folder(_cls):
+    def open_folder(cls):
         try:
-            subprocess.Popen(f'explorer "{_cls._root}"')
+            subprocess.Popen(f'explorer "{cls._root}"')
         except:
             try:
-                subprocess.Popen(["open", _cls._root])
+                subprocess.Popen(["open", cls._root])
             except:
                 try:
-                    subprocess.Popen(["xdg-open", _cls._root])
+                    subprocess.Popen(["xdg-open", cls._root])
                 except:
                     raise TerpsException("What the fuck are you running? FreeBSD?")
 
     @classmethod
-    def open_github(_cls):
+    def open_github(cls):
         webbrowser.open_new("https://github.com/CyWP/Terpsichore")
 
     @classmethod
-    def default_state(_cls):
-        _cls._state_dict = {
+    def default_state(cls):
+        cls._state_dict = {
             "webcam_active": True,
             "webcam_index": 0,
             "delay": 0,
@@ -348,11 +355,17 @@ class AppState:
             "custom_size": False,
             "x_size": 50.0,
             "y_size": 50.0,
-            "max_frequency": 0,
             "epochs": 50,
-            "target_loss": 0.0,
+            "batch_size": 32,
+            "learn_rate": 0.05,
+            "augment": False,
+            "flip_x": False,
+            "flip_y": False,
+            "noise": False,
+            "noise_sigma": 0.02,
             "test_split": 15.0,
-            "cuda": True,
+            "learn_rate": 0.05,
+            "temporal_size": 34,
             "regularization": True,
             "data": path.join(path.expanduser("~"), ".terpsichore"),
             "active_model": "",
