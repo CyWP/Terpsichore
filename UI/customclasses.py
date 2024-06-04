@@ -259,9 +259,9 @@ class ClassTable(CTkScrollableFrame):
     def __init__(self, args, **kwargs):
 
         super().__init__(
-            args, corner_radius=1, border_width=1, width=240, height=254, **kwargs
+            args, corner_radius=1, border_width=1, width=240, height=200, **kwargs
         )
-        self._scrollbar._set_dimensions(width=10, height=254)
+        self._scrollbar._set_dimensions(width=10, height=208)
         for i in range(5):
             self.columnconfigure(i, weight=1)
 
@@ -286,7 +286,7 @@ class ClassTable(CTkScrollableFrame):
                     type="ACTION",
                     text="Select",
                     command=lambda n=name: self.select_gesture(n),
-                ).grid(row=i, column=0, sticky="ew")
+                ).grid(row=i, column=0, sticky="w", padx=4, ipadx=4)
             Log(self, text=name).grid(row=i, column=1, sticky="w")
             Log(self, text=recs).grid(row=i, column=2, sticky="w")
             Log(self, text=space).grid(row=i, column=3, sticky="w")
@@ -295,7 +295,7 @@ class ClassTable(CTkScrollableFrame):
                 type="ACTION",
                 text="Delete",
                 command=lambda n=name: self.remove_gesture(n),
-            ).grid(row=i, column=4, sticky="ew")
+            ).grid(row=i, column=4, sticky="e", padx=4, ipadx=4)
             i += 1
 
     def grid(self, **kwargs):
@@ -322,7 +322,7 @@ class LogFrame(CTkScrollableFrame):
         super().__init__(
             args, corner_radius=1, border_width=1, width=240, height=254, **kwargs
         )
-        self._scrollbar._set_dimensions(width=10, height=340)
+        self._scrollbar._set_dimensions(width=10, height=332)
         self.max_label_length = 125
         Log(self, text="Training Logs").pack(anchor="w", side="top")
 
@@ -350,7 +350,7 @@ class ModelInfoFrame(CTkScrollableFrame):
         super().__init__(
             args, corner_radius=1, border_width=1, width=360, height=282, **kwargs
         )
-        self._scrollbar._set_dimensions(width=10, height=282)
+        self._scrollbar._set_dimensions(width=10, height=328)
         self.max_label_length = 24
         self.draw()
 
@@ -435,9 +435,9 @@ class LoadModelFrame(CTkScrollableFrame):
 
     def __init__(self, args, refresh=None, **kwargs):
         super().__init__(
-            args, corner_radius=1, border_width=1, width=180, height=224, **kwargs
+            args, corner_radius=1, border_width=1, width=180, height=254, **kwargs
         )
-        self._scrollbar._set_dimensions(width=10, height=330)
+        self._scrollbar._set_dimensions(width=10, height=370)
         self.refresh = refresh
         self.draw()
 
@@ -445,14 +445,14 @@ class LoadModelFrame(CTkScrollableFrame):
         for widget in self.winfo_children():
             widget.destroy()
 
-        Label(self, text="Load Model", anchor="center").pack(side="top", fill="x")
+        Log(self, text="Load Model", anchor="w").pack(side="top", fill="x")
         for i, model in enumerate(AppState.get_models()):
             Button(
                 self,
                 type="ACTION",
                 text=model,
                 command=lambda n=model: self.load_model(n),
-            ).pack(side="top", fill="x", pady=2, padx=2)
+            ).pack(side="top", fill="x", pady=4, padx=(8, 4))
 
     def grid(self, **kwargs):
         self.draw()
@@ -463,7 +463,6 @@ class LoadModelFrame(CTkScrollableFrame):
         AppState.load_model(name)
         if self.refresh is not None:
             self.refresh()
-
 
 class Slider(CTkSlider):
 

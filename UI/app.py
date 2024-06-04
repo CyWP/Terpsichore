@@ -22,15 +22,10 @@ class App(CTk):
 
         self.iconbitmap("UI/Assets/dance.ico")
         self.resizable(width=False, height=False)
-        self.wm_minsize(width=820, height=500)
+        self.wm_minsize(width=820, height=516)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
-
-        self.logs = CTkFrame(self, height=0)
-        self.logs.pack(anchor="s", side="bottom", fill="x")
-        self.log = Log(self.logs, text="v0.0")
-        self.log.pack(anchor="e", side="right", fill="x")
 
         self.bottom = CTkFrame(master=self)
         # self.bottom.grid(row=1, column=0, sticky='sew')
@@ -43,10 +38,10 @@ class App(CTk):
 
         self.body.drawHomeFrame()
 
-        title_length = 0.2  # just happens to align with title
+        title_length = 0.15  # just happens to align with title
         self.bottom.rowconfigure(0, weight=1)
         self.bottom.rowconfigure(1, weight=0)
-        for i in range(5):
+        for i in range(4):
             self.bottom.columnconfigure(i, weight=1)
 
         self.botbar = CTkProgressBar(self.bottom, corner_radius=0, height=4)
@@ -62,7 +57,6 @@ class App(CTk):
             bar=self.botbar,
             barlevel=title_length,
         ).grid(row=0, column=0, sticky="nsw")
-
         Button(
             master=self.bottom,
             text="RECORD",
@@ -70,9 +64,8 @@ class App(CTk):
             fct=self.body.drawTraceFrame,
             frame=self.body,
             bar=self.botbar,
-            barlevel=0.4,
+            barlevel=0.39,
         ).grid(row=0, column=1, sticky="nesw")
-
         Button(
             master=self.bottom,
             text="TRAIN",
@@ -80,9 +73,8 @@ class App(CTk):
             fct=self.body.drawTrainFrame,
             frame=self.body,
             bar=self.botbar,
-            barlevel=0.6,
+            barlevel=0.56,
         ).grid(row=0, column=2, sticky="nesw")
-
         Button(
             master=self.bottom,
             text="PERFORM",
@@ -90,9 +82,8 @@ class App(CTk):
             fct=self.body.drawMoveFrame,
             frame=self.body,
             bar=self.botbar,
-            barlevel=0.82,
+            barlevel=0.81,
         ).grid(row=0, column=3, sticky="nesw")
-
         Button(
             master=self.bottom,
             text="",
@@ -100,7 +91,6 @@ class App(CTk):
             img="UI/Assets/folder.png",
             fct=AppState.open_folder,
         ).grid(row=0, column=4, sticky="nesw")
-
         Button(
             master=self.bottom,
             text="",
@@ -108,6 +98,13 @@ class App(CTk):
             img="UI/Assets/settings.png",
             fct=AppState.open_github,
         ).grid(row=0, column=5, sticky="nesw")
+        Button(
+            master=self.bottom,
+            text="",
+            type="IMG",
+            img="UI/Assets/questionmark.png",
+            fct=AppState.open_github,
+        ).grid(row=0, column=6, sticky="nesw")
 
     async def mainloop(self, *args, **kwargs):
         while True:

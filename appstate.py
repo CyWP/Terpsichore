@@ -4,7 +4,7 @@ import subprocess
 import webbrowser
 import shutil
 from model import Model
-from terpsexception import TerpsException
+from terpsexception import TerpsException, InvalidModelException
 from customtkinter import filedialog
 
 class AppState:
@@ -17,7 +17,7 @@ class AppState:
     _training = False
     _training_logs = []
     _stop_training = False
-    _abort_training = False
+    _cancel_training = False
     _file_records = []
     _abort_engine = False
     _learn_rates = [0.001, 0.005, 0.01, 0.05, 0.1]
@@ -72,7 +72,7 @@ class AppState:
     @classmethod
     def active_model(cls):
         cls.check_active_model()
-        return cls._state_dict["active_model"]
+        return cls._active_model
 
     @classmethod
     def save_ui_state(cls):
@@ -100,9 +100,14 @@ class AppState:
 
     @classmethod
     def load_model(cls, name: str):
+        prev_model = cls._active_model
+        prev_name = cls._state_dict["active_model"]
         if name in cls.get_models():
             cls._active_model = Model(cls._models_dir, name, new=False)
             cls._state_dict["active_model"] = name
+        if not path.exists(path.join(cls._models_dir, name)):
+            cls._active_model = prev_model
+            cls._state_dict["active_model"] = prev_name
 
     @classmethod
     def load_last_model(cls):
@@ -151,7 +156,8 @@ class AppState:
 
     @classmethod
     def delete_model(cls, name=None):
-
+        if name is None:
+            name = cls._state_dict["active_model"]
         if name not in cls.get_models():
             raise TerpsException(f"Error: {name} is not an existing model name.")
         cls.load_model(name)
@@ -166,7 +172,7 @@ class AppState:
             cls._state_dict["active_model"] = None
 
     @classmethod
-    def export_model(cls):
+    def export_active_model(cls):
         cls.check_active_model()
         dirpath = filedialog.askdirectory(
             initialdir="/", title="Select Folder", mustexist=True
@@ -174,15 +180,16 @@ class AppState:
         cls.active_model().export(dirpath)
 
     @classmethod
-    def import_model(cls):
+    def import_model(cls, name:str):
         filename = filedialog.askopenfilename(
             defaultextension=".tar.gz", initialdir="/"
         )
-        name = filename[:-7]
+        if name.strip() == "":
+            name = path.basename(filename[:-7])
         if name not in cls.get_models():
             try:
                 cls._active_model = Model(
-                    cls._models_dir, name, new=True, tarpath=filename
+                    cls._models_dir, name, new=False, tarpath=filename
                 )
             except Exception as e:
                 raise TerpsException(
@@ -192,7 +199,7 @@ class AppState:
         else:
             # Should probably add some error handling for if folder is created but not model object.
             raise TerpsException(
-                f"Model {name} already exists. Change the name of file you wish to load."
+                f"Model {name} already exists. Specify another name for the model you wish to import."
             )
 
     @classmethod
@@ -302,6 +309,14 @@ class AppState:
         if cls._active_model is not None:
             return cls._active_model.is_trained()
         return False
+    
+    @classmethod
+    def cancel_training(cls):
+        cls._cancel_training = True
+
+    @classmethod
+    def stop_training(cls):
+        cls._stop_training = True
     
     @classmethod
     def reset_training(cls):

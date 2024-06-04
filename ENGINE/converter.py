@@ -4,7 +4,6 @@ from .mvnet import MoveNet
 import tensorflow as tf
 from .tasks import Tasks
 from appstate import AppState
-import traceback
 from terpsexception import TerpsException
 from appstate import AppState
 

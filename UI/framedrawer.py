@@ -150,7 +150,7 @@ class ConsciousFrame(CTkFrame):
             self.right, type="ACTION", text="Export", command=self.export_model
         )
         self.import_model_button = Button(
-            self.right, type="ACTION", text="Import", command=self.export_model
+            self.right, type="ACTION", text="Import As", command=self.import_model
         )
         self.restore_deleted_button = Button(
             self.right, type="ACTION", text="Restore", command=self.restore_deleted
@@ -389,22 +389,22 @@ class ConsciousFrame(CTkFrame):
             self.home_img.pack(side="top", anchor="nw", fill="both")
 
             self.new_model_entry.grid(
-                row=0, column=0, columnspan=2, sticky="ew", pady=(6, 8)
+                row=0, column=0, columnspan=2, sticky="ew", pady=8
             )
             self.new_model_button.grid(
-                row=1, column=0, columnspan=1, sticky="ew", padx=(0, 4)
+                row=1, column=0, columnspan=1, sticky="ew", padx=(0, 4), pady=0
             )
             self.copy_model_button.grid(
-                row=1, column=1, columnspan=1, sticky="ew", padx=(4, 0)
+                row=1, column=1, columnspan=1, sticky="ew", padx=(4, 0), pady=0
             )
             self.model_info_frame.grid(
                 row=2, rowspan=4, column=0, columnspan=2, sticky="nesw", pady=8
             )
             self.delete_model_button.grid(
-                row=6, column=0, columnspan=1, sticky="ew", padx=(0, 4)
+                row=6, column=0, columnspan=1, sticky="ew", padx=(0, 4), pady=0
             )
             self.restore_deleted_button.grid(
-                row=6, column=1, columnspan=1, sticky="ew", padx=(4, 0)
+                row=6, column=1, columnspan=1, sticky="ew", padx=(4, 0), pady=0
             )
 
             self.load_model_frame.grid(
@@ -601,10 +601,10 @@ class ConsciousFrame(CTkFrame):
             Button(left, type="BIG", text="TRAIN", command=self.train).pack(
                 anchor="sw", side="bottom"
             )
-            Button(left, type="BIG", text="STOP").pack(anchor="sw", side="bottom")
+            Button(left, type="BIG", text="STOP", command=AppState.stop_training).pack(anchor="sw", side="bottom")
             right = self.right
             self.train_img.pack(side="top", anchor="n", fill="y")
-            Button(left, type="BIG", text="CANCEL").pack(anchor="sw", side="bottom")
+            Button(left, type="BIG", text="CANCEL", command=AppState.cancel_training).pack(anchor="sw", side="bottom")
             right = self.right
             self.train_img.pack(side="top", anchor="n", fill="y")
             row = 0
@@ -719,7 +719,8 @@ class ConsciousFrame(CTkFrame):
         self.redrawHome()
 
     def import_model(self):
-        AppState.import_model()
+        name = self.new_model_entry.get()
+        AppState.import_model(name)
         self.redrawHome()
 
     def export_model(self):
