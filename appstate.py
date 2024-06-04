@@ -147,17 +147,21 @@ class AppState:
 
     @classmethod
     def new_model(cls, name: str):
+        if name.strip() == "":
+            raise TerpsException("Error: Cannot create unnamed model. Provide a valid name in entry.")
         if name not in cls.get_models():
             cls._active_model = Model(cls._models_dir, name, new=True)
             cls._state_dict["active_model"] = name
         else:
             cls.load_model(name)
-            raise TerpsException(f"Model {name} already exists and was loaded instead.")
+            raise TerpsException(f"Error: Model {name} already exists and was loaded instead.")
 
     @classmethod
     def delete_model(cls, name=None):
         if name is None:
             name = cls._state_dict["active_model"]
+        if name is None:
+            raise TerpsException(f"Error: no currently active model.")
         if name not in cls.get_models():
             raise TerpsException(f"Error: {name} is not an existing model name.")
         cls.load_model(name)
@@ -323,7 +327,7 @@ class AppState:
         cls._training = False
         cls._training_logs = []
         cls._stop_training = False
-        cls._abort_training = False
+        cls._cancel_training = False
 
     @classmethod
     def update_model(cls, label_map: dict):

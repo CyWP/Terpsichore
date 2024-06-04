@@ -44,7 +44,7 @@ class ColImage(CTkLabel):
 
         self.path = path
         self.size = size
-        img = colorize(path, color)
+        img = colorize(path, color, self.size)
         img.configure(size=size)
         super().__init__(master, image=img, text="", anchor=anchor)
 
@@ -78,6 +78,7 @@ class Button(CTkButton):
         fct=lambda: None,
         frame=None,
         img=None,
+        size=(64, 64),
         bar=None,
         barlevel=0.0,
         **kwargs,
@@ -97,6 +98,7 @@ class Button(CTkButton):
         self.fct = fct
         self.bar = bar
         self.barlevel = barlevel
+        self.size = size
 
         base_color = self.cget("text_color")
 
@@ -150,17 +152,18 @@ class Log(CTkLabel):
 
 class ComboBox(CTkComboBox):
 
-    def __init__(self, args, **kwargs):
+    def __init__(self, master, *args, **kwargs):
 
+        self.frame = NormalFrame(master, corner_radius=1, border_width=1,)
         super().__init__(
-            args,
+            self.frame,
+            *args,
             font=FONTS["tab"]["info"],
             dropdown_font=FONTS["tab"]["info"],
             justify="center",
             state="readonly",
             **kwargs,
         )
-
         self.base_color = self.cget("text_color")
 
         self.bind("<Leave>", lambda event: self.colorButton(self.base_color))
@@ -176,6 +179,9 @@ class ComboBox(CTkComboBox):
     def colorButton(self, color):
         self.configure(button_hover_color=color, text_color=color)
 
+    def grid(self, **kwargs):
+        self.frame.grid(**kwargs)
+        super().grid(sticky="nesw", padx=1, pady=1)
 
 class CheckBox(CTkCheckBox):
 
@@ -286,7 +292,7 @@ class ClassTable(CTkScrollableFrame):
                     type="ACTION",
                     text="Select",
                     command=lambda n=name: self.select_gesture(n),
-                ).grid(row=i, column=0, sticky="w", padx=4, ipadx=4)
+                ).grid(row=i, column=0, sticky="w", padx=4, ipadx=4, pady=4)
             Log(self, text=name).grid(row=i, column=1, sticky="w")
             Log(self, text=recs).grid(row=i, column=2, sticky="w")
             Log(self, text=space).grid(row=i, column=3, sticky="w")
@@ -478,3 +484,6 @@ class Slider(CTkSlider):
 
     def colorButton(self, color):
         self.configure(button_color=color, progress_color=color)
+
+    def grid(self, padx=(0, 54), **kwargs):
+        super().grid(padx=padx, **kwargs)

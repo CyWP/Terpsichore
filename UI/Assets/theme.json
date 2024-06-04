@@ -57,7 +57,7 @@
     },
     "CTkRadioButton": {
       "corner_radius": 1000,
-      "border_width_checked": 6,
+      "border_width_checked": 10,
       "border_width_unchecked": 1,
       "fg_color": ["#ffffff", "#3f3f3f"],
       "border_color": ["#3f3f3f", "#dedede"],

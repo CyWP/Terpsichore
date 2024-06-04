@@ -7,6 +7,7 @@ from .customclasses import (
     NormalFrame,
     Entry,
     Label,
+    Log,
     ClassTable,
     Slider,
     LogFrame,
@@ -67,6 +68,7 @@ class ConsciousFrame(CTkFrame):
         self.right.columnconfigure(3, weight=1)
 
         self.input_settings_frame = NormalFrame(self.right)
+        self.input_settings_frame.columnconfigure([i for i in range(5)], weight=1)
         self.osc_settings_frame = NormalFrame(self.right)
         self.osc_settings_frame.columnconfigure(index=[i for i in range(5)], weight=1)
         self.class_table = ClassTable(self.right)
@@ -74,13 +76,13 @@ class ConsciousFrame(CTkFrame):
         self.model_info_frame = ModelInfoFrame(self.right)
 
         self.input_delay_entry = Entry(
-            self.input_settings_frame, width=36, textvariable=self.input_delay
+            self.input_settings_frame, width=54, textvariable=self.input_delay
         )
         self.input_duration_entry = Entry(
-            self.input_settings_frame, width=36, textvariable=self.input_duration
+            self.input_settings_frame, width=54, textvariable=self.input_duration
         )
         self.webcam_index_entry = Entry(
-            self.input_settings_frame, width=36, textvariable=self.webcam_index
+            self.input_settings_frame, width=54, textvariable=self.webcam_index
         )
         self.batch_size_entry = Entry(
             self.right, width=54, textvariable=self.batch_size
@@ -116,9 +118,9 @@ class ConsciousFrame(CTkFrame):
         Label(self.osc_settings_frame, text="OSC Output [ Ip, Port, Adress ]").grid(
             row=0, column=0, columnspan=2, sticky="w"
         )
-        self.osc_ip_entry.grid(row=0, column=2, sticky="w")
-        self.osc_port_entry.grid(row=0, column=3, sticky="w")
-        self.osc_address_entry.grid(row=0, column=4, sticky="w")
+        self.osc_ip_entry.grid(row=0, column=2, sticky="ew")
+        self.osc_port_entry.grid(row=0, column=3, sticky="ew", padx=8)
+        self.osc_address_entry.grid(row=0, column=4, sticky="ew")
 
         self.train_epochs_entry = Entry(
             self.right, width=54, textvariable=self.train_epochs
@@ -126,14 +128,14 @@ class ConsciousFrame(CTkFrame):
         self.temporal_size_entry = Entry(
             self.right, width=54, textvariable=self.temporal_size
         )
-        self.test_split_label = Label(self.right, text=f"{self.test_split.get():.1f}%")
-        self.x_loc_label = Label(self.right, text=f"{self.x_loc.get():.1f}%")
-        self.y_loc_label = Label(self.right, text=f"{self.y_loc.get():.1f}%")
-        self.x_size_label = Label(self.right, text=f"{self.x_size.get():.1f}%")
-        self.y_size_label = Label(self.right, text=f"{self.y_size.get():.1f}%")
-        self.momentum_label = Label(self.right, text=f"{self.momentum.get():.2f}")
-        self.conf_threshold_label = Label(
-            self.right, text=f"{self.conf_threshold.get():.2f}"
+        self.test_split_label = Log(self.right, text=f"{self.test_split.get():.1f}%", anchor="e")
+        self.x_loc_label = Log(self.right, text=f"{self.x_loc.get():.1f}%", anchor="e")
+        self.y_loc_label = Log(self.right, text=f"{self.y_loc.get():.1f}%", anchor="e")
+        self.x_size_label = Log(self.right, text=f"{self.x_size.get():.1f}%", anchor="e")
+        self.y_size_label = Log(self.right, text=f"{self.y_size.get():.1f}%", anchor="e")
+        self.momentum_label = Log(self.right, text=f"{self.momentum.get():.2f}", anchor="e")
+        self.conf_threshold_label = Log(
+            self.right, text=f"{self.conf_threshold.get():.2f}", anchor="e"
         )
         self.new_gesture_entry = Entry(self.right, width=0, placeholder_text="")
         self.new_model_entry = Entry(self.right, width=0, placeholder_text="")
@@ -319,9 +321,9 @@ class ConsciousFrame(CTkFrame):
             )
             self.input_delay_entry.grid(row=0, column=1, sticky="w")
             Label(self.input_settings_frame, text="Source").grid(
-                row=0, column=2, sticky="nesw"
+                row=0, column=2, sticky="w"
             )
-            self.video_path_button.grid(row=0, column=3, columnspan=3, sticky="ew")
+            self.video_path_button.grid(row=0, column=3, columnspan=2, sticky="we")
 
     def set_input_webcam(self):
         if not self.webcam_active.get():
@@ -332,15 +334,15 @@ class ConsciousFrame(CTkFrame):
             Label(self.input_settings_frame, text="Delay").grid(
                 row=0, column=0, sticky="w"
             )
-            self.input_delay_entry.grid(row=0, column=1, sticky="w")
+            self.input_delay_entry.grid(row=0, column=0, sticky="e")
             Label(self.input_settings_frame, text="Duration").grid(
-                row=0, column=2, sticky="e"
+                row=0, column=2, sticky="w"
             )
-            self.input_duration_entry.grid(row=0, column=3, sticky="w")
+            self.input_duration_entry.grid(row=0, column=2, sticky="e")
             Label(self.input_settings_frame, text="Index").grid(
-                row=0, column=4, sticky="e"
+                row=0, column=4, sticky="w"
             )
-            self.webcam_index_entry.grid(row=0, column=5, sticky="w")
+            self.webcam_index_entry.grid(row=0, column=4, sticky="e")
         try:
             self.video_path_button.destroy()
             self.video_path_button = Button(
@@ -444,8 +446,6 @@ class ConsciousFrame(CTkFrame):
             self.input_settings_frame.grid(
                 row=row, column=0, columnspan=4, sticky="nesw"
             )
-            for i in range(6):
-                self.input_settings_frame.columnconfigure(i, weight=1)
             if self.webcam_active.get():
                 self.webcam_active.set(False)
                 self.webcam_rb.invoke()
@@ -455,41 +455,13 @@ class ConsciousFrame(CTkFrame):
             row += 1
 
             Label(right, text="Display").grid(row=row, column=0, sticky="w")
-            self.display_input.grid(row=row, column=1, columnspan=1, sticky="")
+            self.display_input.grid(row=row, column=1, columnspan=1, sticky="w")
             if AppState.get_attr("show") != self.display_input.get():
                 self.display_input.toggle()
-            self.display_pose.grid(row=row, column=2, columnspan=1, sticky="")
+            self.display_pose.grid(row=row, column=2, columnspan=1, sticky="w")
             if AppState.get_attr("show_pose") != self.display_pose.get():
                 self.display_pose.toggle()
             self.custom_size.grid(row=row, column=3, sticky="w")
-            row += 1
-
-            Label(right, text="X Loc").grid(row=row, column=0, columnspan=1, sticky="w")
-            self.x_loc_label.grid(row=row, column=3, columnspan=1, sticky="e")
-            self.x_loc_slider.grid(
-                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
-            )
-            row += 1
-
-            Label(right, text="Y Loc").grid(row=row, column=0, columnspan=1, sticky="w")
-            self.y_loc_label.grid(row=row, column=3, columnspan=1, sticky="e")
-            self.y_loc_slider.grid(
-                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
-            )
-            row += 1
-
-            Label(right, text="Momentum").grid(row=row, column=0, sticky="w")
-            self.momentum_label.grid(row=row, column=3, columnspan=1, sticky="e")
-            self.momentum_slider.grid(
-                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
-            )
-            row += 1
-
-            Label(right, text="CT").grid(row=row, column=0, sticky="w")
-            self.conf_threshold_label.grid(row=row, column=3, columnspan=1, sticky="e")
-            self.conf_threshold_slider.grid(
-                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
-            )
             row += 1
 
             Label(right, text="X Size").grid(
@@ -497,7 +469,7 @@ class ConsciousFrame(CTkFrame):
             )
             self.x_size_label.grid(row=row, column=3, columnspan=1, sticky="e")
             self.x_size_slider.grid(
-                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
+                row=row, column=1, columnspan=3, sticky="ew"
             )
             row += 1
 
@@ -506,7 +478,35 @@ class ConsciousFrame(CTkFrame):
             )
             self.y_size_label.grid(row=row, column=3, columnspan=1, sticky="e")
             self.y_size_slider.grid(
-                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
+                row=row, column=1, columnspan=3, sticky="ew"
+            )
+            row += 1
+
+            Label(right, text="X Loc").grid(row=row, column=0, columnspan=1, sticky="w")
+            self.x_loc_label.grid(row=row, column=3, columnspan=1, sticky="e")
+            self.x_loc_slider.grid(
+                row=row, column=1, columnspan=3, sticky="ew"
+            )
+            row += 1
+
+            Label(right, text="Y Loc").grid(row=row, column=0, columnspan=1, sticky="w")
+            self.y_loc_label.grid(row=row, column=3, columnspan=1, sticky="e")
+            self.y_loc_slider.grid(
+                row=row, column=1, columnspan=3, sticky="ew"
+            )
+            row += 1
+
+            Label(right, text="Momentum").grid(row=row, column=0, sticky="w")
+            self.momentum_label.grid(row=row, column=3, columnspan=1, sticky="e")
+            self.momentum_slider.grid(
+                row=row, column=1, columnspan=3, sticky="ew"
+            )
+            row += 1
+
+            Label(right, text="CT").grid(row=row, column=0, sticky="w")
+            self.conf_threshold_label.grid(row=row, column=3, columnspan=1, sticky="e")
+            self.conf_threshold_slider.grid(
+                row=row, column=1, columnspan=3, sticky="ew"
             )
             row += 1
 
@@ -516,8 +516,8 @@ class ConsciousFrame(CTkFrame):
             Label(right, text="OSC Listening Server [ Port ]").grid(
                 row=row, column=0, columnspan=2, sticky="w"
             )
-            self.listen_port_entry.grid(row=row, column=2, sticky="w")
-            self.listen_server_button.grid(row=row, column=3, sticky="ew", padx=(8, 28))
+            self.listen_port_entry.grid(row=row, column=2, sticky="ew")
+            self.listen_server_button.grid(row=row, column=3, sticky="ew", padx=(8, 0))
 
     def drawTraceFrame(self):
 
@@ -543,8 +543,6 @@ class ConsciousFrame(CTkFrame):
             self.input_settings_frame.grid(
                 row=row, column=0, columnspan=4, sticky="nesw"
             )
-            for i in range(6):
-                self.input_settings_frame.columnconfigure(i, weight=1)
             if self.webcam_active.get():
                 self.webcam_active.set(False)
                 self.webcam_rb.invoke()
@@ -565,14 +563,14 @@ class ConsciousFrame(CTkFrame):
             Label(right, text="Momentum").grid(row=row, column=0, sticky="w")
             self.momentum_label.grid(row=row, column=3, columnspan=1, sticky="e")
             self.momentum_slider.grid(
-                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
+                row=row, column=1, columnspan=3, sticky="ew"
             )
             row += 1
 
             Label(right, text="CT").grid(row=row, column=0, sticky="w")
             self.conf_threshold_label.grid(row=row, column=3, columnspan=1, sticky="e")
             self.conf_threshold_slider.grid(
-                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
+                row=row, column=1, columnspan=3, sticky="ew"
             )
             row += 1
 
@@ -612,22 +610,28 @@ class ConsciousFrame(CTkFrame):
             Label(right, text="Epochs").grid(
                 row=row, column=0, sticky="w"
             )
-            self.train_epochs_entry.grid(row=row, column=1, sticky="w")
-            Label(right, text="Batch Size").grid(row=row, column=2, sticky="w")
-            self.batch_size_entry.grid(row=row, column=3, sticky="w")
+            self.train_epochs_entry.grid(row=row, column=1, sticky="e")
+            Label(right, text="                ").grid(
+                row=row, column=2
+            )
+            Label(right, text="Batch Size").grid(row=row, column=3, sticky="w")
+            self.batch_size_entry.grid(row=row, column=3, sticky="e")
             row += 1
 
             Label(right, text="Learning Rate").grid(
-                row=row, column=0, sticky=""
+                row=row, column=0, sticky="w"
             )
             self.learn_rate_select.grid(
-                row=row, column=1, sticky="w"
+                row=row, column=1, sticky="e"
+            )
+            Label(right, text="                ").grid(
+                row=row, column=2
             )
             Label(right, text="Temporal Size").grid(
-                row=row, column=2, sticky=""
+                row=row, column=3, sticky="w"
             )
             self.temporal_size_entry.grid(
-                row=row, column=3, sticky="w"
+                row=row, column=3, sticky="e"
             )
             row += 1
 
@@ -636,7 +640,7 @@ class ConsciousFrame(CTkFrame):
             )
             self.test_split_label.grid(row=row, column=3, columnspan=1, sticky="e")
             self.test_split_slider.grid(
-                row=row, column=1, columnspan=3, sticky="ew", padx=(0, 108)
+                row=row, column=1, columnspan=3, sticky="ew"
             )
             row += 1
 
@@ -735,7 +739,7 @@ class ConsciousFrame(CTkFrame):
         if title is None:
             self.master.title("Load or create a model")
         else:
-            self.master.title(title)
+            self.master.title(f"Terpsichore: {title}")
 
     def record(self):
         self.set_ui_inputs()

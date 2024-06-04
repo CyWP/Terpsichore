@@ -1,5 +1,6 @@
 from appstate import AppState
 import tensorflow as tf
+import logging
 from .mvnet import MoveNet
 from terpsexception import TerpsException
 
@@ -9,10 +10,12 @@ class TrainingCallback(tf.keras.callbacks.Callback):
         AppState.train_log(
             f"Epoch {epoch+1}, Loss: {logs['loss']}, Accuracy: {logs['accuracy']}"
         )
+
+    def on_batch_end(self, batch, logs=None):
         if AppState._stop_training:
             self.model.stop_training = True
             AppState.train_log("Training stopped manually.") 
-        if AppState._abort_training:
+        if AppState._cancel_training:
             self.model.stop_training = True
             AppState.train_log("Training aborted. Model will not be saved.")
         
@@ -34,6 +37,7 @@ class Classifier(tf.keras.Model):
             self.batch_size = int(AppState.get_attr("batch_size"))
         except:
             raise TerpsException("Error: Invalid UI input.")
+        tf.get_logger().setLevel(logging.ERROR)
         self.spatial_size = MoveNet.INPUT_SIZE.value
         self.custom_input_shape = (self.temporal_size, self.spatial_size, 1)
         self.num_classes = AppState.get_num_classes()

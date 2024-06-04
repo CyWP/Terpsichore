@@ -31,7 +31,7 @@ class Trainer:
 
             model.train(X_trn, y_trn, X_val, y_val)
 
-            if not AppState._abort_training:
+            if not AppState._cancel_training:
                 model.save(filepath=weights_path)
 
             AppState.update_model(label_map)
