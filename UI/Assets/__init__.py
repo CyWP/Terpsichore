@@ -24,9 +24,11 @@ FONTS = {
 THEME = {
     "text_hover": "#5000ff",
     "hover_colors": (
+        ("#0000ff", "#0000ff"),
         ("#5000ff", "#5000ff"),
-        ("#e525b9", "#e525b9"),
-        ("#56c67d", "#56c67d"),
+        ("#BCB6FF", "#BCB6FF"),
+        ("#3B28CC", "#3B28CC"),
+        ("#65AFFF", "#65AFFF"),
     ),
     "widget_padding_x": 20,
     "widget_padding_y": 5,

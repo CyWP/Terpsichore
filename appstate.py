@@ -335,15 +335,15 @@ class AppState:
             cls._active_model.update_model_info(label_map)
 
     @classmethod
-    def open_folder(cls):
+    def open_models_folder(cls):
         try:
-            subprocess.Popen(f'explorer "{cls._root}"')
+            subprocess.Popen(f'explorer "{cls._models_dir}"')
         except:
             try:
-                subprocess.Popen(["open", cls._root])
+                subprocess.Popen(["open", cls._models_dir])
             except:
                 try:
-                    subprocess.Popen(["xdg-open", cls._root])
+                    subprocess.Popen(["xdg-open", cls._models_dir])
                 except:
                     raise TerpsException("What the fuck are you running? FreeBSD?")
 

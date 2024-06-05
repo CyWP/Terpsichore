@@ -1,2 +1,3 @@
+![Terpsichore: Gesture Classification for Artists](docs/assets/topbanner.png)
 # Terpsichore
- Gesture classification for artists
+## Gesture classification for artists

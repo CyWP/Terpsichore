@@ -64,7 +64,7 @@ class App(CTk):
             fct=self.body.drawTraceFrame,
             frame=self.body,
             bar=self.botbar,
-            barlevel=0.39,
+            barlevel=0.41,
         ).grid(row=0, column=1, sticky="nesw")
         Button(
             master=self.bottom,
@@ -73,7 +73,7 @@ class App(CTk):
             fct=self.body.drawTrainFrame,
             frame=self.body,
             bar=self.botbar,
-            barlevel=0.56,
+            barlevel=0.595,
         ).grid(row=0, column=2, sticky="nesw")
         Button(
             master=self.bottom,
@@ -82,29 +82,22 @@ class App(CTk):
             fct=self.body.drawMoveFrame,
             frame=self.body,
             bar=self.botbar,
-            barlevel=0.81,
+            barlevel=0.86,
         ).grid(row=0, column=3, sticky="nesw")
         Button(
             master=self.bottom,
             text="",
             type="IMG",
             img="UI/Assets/folder.png",
-            fct=AppState.open_folder,
+            fct=AppState.open_models_folder,
         ).grid(row=0, column=4, sticky="nesw")
         Button(
             master=self.bottom,
             text="",
             type="IMG",
-            img="UI/Assets/settings.png",
+            img="UI/Assets/help.png",
             fct=AppState.open_github,
         ).grid(row=0, column=5, sticky="nesw")
-        Button(
-            master=self.bottom,
-            text="",
-            type="IMG",
-            img="UI/Assets/questionmark.png",
-            fct=AppState.open_github,
-        ).grid(row=0, column=6, sticky="nesw")
 
     async def mainloop(self, *args, **kwargs):
         while True:

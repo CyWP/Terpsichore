@@ -239,25 +239,25 @@ class ConsciousFrame(CTkFrame):
         self.home_img = ColImage(
             self.left,
             path="UI/Assets/home.png",
-            size=(150, 263),
+            size=(150, 450),
             color=self.test_split_label.cget("text_color"),
         )
         self.move_img = ColImage(
             self.left,
             path="UI/Assets/move.png",
-            size=(150, 214),
+            size=(150, 410),
             color=self.test_split_label.cget("text_color"),
         )
         self.rec_img = ColImage(
             self.left,
             path="UI/Assets/rec.png",
-            size=(150, 165),
+            size=(150, 360),
             color=self.test_split_label.cget("text_color"),
         )
         self.train_img = ColImage(
             self.left,
             path="UI/Assets/train.png",
-            size=(150, 165),
+            size=(150, 310),
             color=self.test_split_label.cget("text_color"),
         )
 
