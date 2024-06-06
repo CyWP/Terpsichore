@@ -46,6 +46,7 @@ class ConsciousFrame(CTkFrame):
         self.temporal_size = StringVar(self, value=AppState.get_attr("temporal_size"))
         self.batch_size = StringVar(self, value=AppState.get_attr("batch_size"))
         self.test_split = DoubleVar(self, value=AppState.get_attr("test_split"))
+        self.noise_sigma = DoubleVar(self, value=AppState.get_attr("noise_sigma"))
         self.x_loc = DoubleVar(self, value=AppState.get_attr("x_loc"))
         self.y_loc = DoubleVar(self, value=AppState.get_attr("y_loc"))
         self.x_size = DoubleVar(self, value=AppState.get_attr("x_size"))
@@ -102,6 +103,8 @@ class ConsciousFrame(CTkFrame):
             self.display_pose.toggle()
         self.use_cuda = CheckBox(self.right, text="CUDA")
         self.use_regularization = CheckBox(self.right, text="Pose")
+        self.flip_x = CheckBox(self.right, text="Flip X")
+        self.flip_y = CheckBox(self.right, text="Flip Y")
 
         self.listen_port_entry = Entry(
             self.right, width=54, textvariable=self.listen_port
@@ -137,6 +140,7 @@ class ConsciousFrame(CTkFrame):
         self.conf_threshold_label = Log(
             self.right, text=f"{self.conf_threshold.get():.2f}", anchor="e"
         )
+        self.noise_label = Log(self.right, text=f"{self.noise_sigma.get():.4f}", anchor="e")
         self.new_gesture_entry = Entry(self.right, width=0, placeholder_text="")
         self.new_model_entry = Entry(self.right, width=0, placeholder_text="")
         self.new_model_button = Button(
@@ -233,6 +237,14 @@ class ConsciousFrame(CTkFrame):
             to=0.25,
             number_of_steps=25,
             command=self.conf_threshold_callback,
+            variable=self.conf_threshold,
+        )
+        self.noise_slider = Slider(
+            self.right,
+            from_=0,
+            to=0.025,
+            number_of_steps=50,
+            command=self.noise_callback,
             variable=self.conf_threshold,
         )
 
@@ -374,6 +386,9 @@ class ConsciousFrame(CTkFrame):
 
     def conf_threshold_callback(self, value):
         self.conf_threshold_label.configure(text=f"{value:.2f}")
+
+    def noise_callback(self, value):
+        self.noise_label.configure(text=f"{value:.4f}")
 
     def redrawHome(self):
         self.state = ""
@@ -644,6 +659,16 @@ class ConsciousFrame(CTkFrame):
             )
             row += 1
 
+            Label(right, text="Augment").grid(row=row, column=0, columnspan=1, sticky="w")
+            self.flip_x.grid(row=row, column=1, sticky="w")
+            self.flip_y.grid(row=row, column=3, sticky="w")
+            row += 1
+
+            Label(right, text="White Noise").grid(row=row, column=0, sticky="w")
+            self.noise_slider.grid(row=row, column=1, columnspan=3, sticky="ew")
+            self.noise_label.grid(row=row, column=3, sticky="e")
+            row += 1
+
             self.logs_frame = LogFrame(right)
             self.logs_frame.grid(
                 row=row, rowspan=2, column=0, columnspan=4, sticky="nesw"
@@ -669,6 +694,9 @@ class ConsciousFrame(CTkFrame):
             "batch_size": int(self.batch_size.get()),
             "temporal_size": int(self.temporal_size.get()),
             "learn_rate": float(self.learn_rate.get()),
+            "flip_x": self.flip_x.get(),
+            "flip_y": self.flip_y.get(),
+            "noise_sigma": self.noise_sigma.get(),
             "conf_threshold": self.conf_threshold.get(),
             "momentum": self.momentum.get(),
             "custom_size": self.custom_size.get(),
@@ -692,6 +720,9 @@ class ConsciousFrame(CTkFrame):
         self.temporal_size.set(AppState.get_attr("temporal_size"))
         self.batch_size.set(AppState.get_attr("batch_size"))
         self.learn_rate.set(AppState.get_attr("learn_rate"))
+        self.flip_x.set(AppState.get_attr("flip_x"))
+        self.flip_y.set(AppState.get_attr("flip_y"))
+        self.noise_sigma.set(AppState.get_attr("noise_sigma"))
         self.display_input.set(AppState.get_attr("show"))
         self.display_pose.set(AppState.get_attr("show_pose"))
         self.send_pose_data.set(AppState.get_attr("send_pose"))

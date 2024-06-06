@@ -1,0 +1,5 @@
+customtkinter>=5.2.2
+tensorflow>=2.14.0
+python-osc>=1.8.3
+opencv>=4.8.1
+scikit-learn>=1.4.0

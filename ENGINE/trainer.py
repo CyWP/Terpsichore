@@ -1,4 +1,5 @@
 from appstate import AppState
+from ENGINE.mvnet import MoveNet
 from os import path, listdir
 import numpy as np
 import tensorflow as tf
@@ -6,7 +7,7 @@ import time
 from .classifier import get_classifier
 import threading
 from sklearn.model_selection import train_test_split
-
+import copy
 
 class Trainer:
 
@@ -51,6 +52,10 @@ class Trainer:
     @classmethod
     def preprocess(cls, test_split, temporal_size):
 
+        flip_x = AppState.get_attr("flip_x")
+        flip_y = AppState.get_attr("flip_y")
+        sigma = AppState.get_attr("noise_sigma")
+        spatial_size = MoveNet.INPUT_SIZE.value
         AppState.train_log("Initiated data preprocessing")
         # simply an array of gesture names, with the index being its corresponding label value(int, not one-hot encoded)
         gesture_names = []
@@ -80,11 +85,40 @@ class Trainer:
                     X.append(recs[i : i + temporal_size, :])
                     y.append(label)
 
-        X = np.expand_dims(np.array(X), -1)
-        y = np.expand_dims(np.array(y), -1)
+        X = np.array(X)
+        y = np.array(y)
+        X_copy = X.copy()
+        y_copy = y.copy()
+
+        if flip_x:
+            mask_x = np.tile([True, False], spatial_size//2)
+            flipped_x = X_copy.copy()
+            flipped_x[..., mask_x] = -flipped_x[..., mask_x]
+            X = np.concatenate([X, flipped_x], axis=0)
+            y = np.concatenate([y, y_copy], axis=0)
+            AppState.train_log(f"Data augmentation: mirroring on X-axis")
+
+        if flip_y:
+            mask_y = np.tile([False, True], spatial_size//2)
+            flipped_y = X_copy.copy()
+            flipped_y[..., mask_y] = -flipped_y[..., mask_y]
+            X = np.concatenate([X, flipped_y], axis=0)
+            y = np.concatenate([y, y_copy], axis=0)
+            AppState.train_log(f"Data augmentation: mirroring on Y-axis")
+
+        if sigma > 0.0:
+            noise = sigma*np.random.normal(loc=0.0, scale=1, size=X.shape)
+            X = np.concatenate([X, noise+X], axis=0)
+            y = np.concatenate([y, y], axis=0)
+            AppState.train_log(f"Data augmentation: Appending noisy(Gaussian white noise, std dev={sigma}) copy of original dataset.")
+ 
+        X = np.expand_dims(X, -1)
+        y = np.expand_dims(y, -1)
+
+        AppState.train_log(f"Dataset Shape: {X.shape}")
 
         if test_split > 0.0:
-            AppState.train_log("Splitting datasets")
+            AppState.train_log(f"Splitting datasets: test split={test_split}")
             X_trn, X_val, y_trn, y_val = train_test_split(X, y, test_size=test_split)
             print(X_trn.shape)
             AppState.train_log("Preprocessing Complete")

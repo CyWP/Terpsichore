@@ -1,14 +1,9 @@
 from customtkinter import (
     CTk,
     CTkFrame,
-    CTkProgressBar,
-    CTkCheckBox,
-    BooleanVar,
-    StringVar,
-    IntVar,
-    DoubleVar,
+    CTkProgressBar
 )
-from .customclasses import Button, Log
+from .customclasses import Button
 from .framedrawer import ConsciousFrame
 import asyncio
 from taskmanager import TaskManager

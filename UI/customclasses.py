@@ -326,9 +326,9 @@ class LogFrame(CTkScrollableFrame):
     def __init__(self, args, **kwargs):
 
         super().__init__(
-            args, corner_radius=1, border_width=1, width=240, height=250, **kwargs
+            args, corner_radius=1, border_width=1, width=240, height=218, **kwargs
         )
-        self._scrollbar._set_dimensions(width=10, height=328)
+        self._scrollbar._set_dimensions(width=10, height=246)
         self.max_label_length = 125
         Log(self, text="Training Logs").pack(anchor="w", side="top")
 
