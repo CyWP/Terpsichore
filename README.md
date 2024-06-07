@@ -59,8 +59,8 @@ Includes everything related to model management. For everything related to the p
 - Display: Choose what to display on screen while recording.
   -  Input: Toggles display of video input.
   -  Pose: Toggles the overlay of the predicted pose at each frame (while the pose will be correct, it currently does not perfectly overlay the body in video).
-- Momentum: Refer to
-- CT: Refer to
+- Momentum: Refer to [Momentum](#heuristics).
+- CT: Refer to [Confidence Threshold](#heuristics).
 
 ### Train
 - Train: Start training the classifier. Logs appear in the frame below. At some point, training logs may take some time to appear due to them only being emitted at every epoch.
@@ -74,7 +74,7 @@ Includes everything related to model management. For everything related to the p
 - Augment: AKA [data augmentation](https://developers.google.com/machine-learning/glossary/#data-augmentation)
   - Flip X: Create a copy of the dataset mirrored on the X-axis (horizontal).
   - Flip Y: Create a copy of the dataset mirrored on the Y-axis (vertical).
-  - White Noise: Set the standard deviation ($\sigma$) of gaussian white noise added to a copy of the dataset. None added if set to 0.
+  - White Noise: Set the standard deviation (\sigma) of gaussian white noise added to a copy of the dataset. None added if set to 0.
 
 ### Perform
 - Move: Launch the classifier and OSC dispatcher for interaction with other software.
@@ -103,9 +103,9 @@ Includes everything related to model management. For everything related to the p
 Gestural data is represented as arrays (time sequence) of pose data generated using TensorFlow's [MoveNet Lightning](https://www.tensorflow.org/hub/tutorials/movenet), consisting of 17 keypoints (x, y) representing screen coordinates of detected [joints](https://storage.googleapis.com/movenet/coco-keypoints-500.png) on the body. Note that the axes (x, y, z) refer to sxcreen space. As such, the X-axis refers to the horizontal axis, y the vertical axis, and the Z-axis refers to depth or distance from the screen's plane, with the origin being the bottom left corner of the screen.
 ### Training data
   
-Training data is simply saved as a csv file of floats $\in$[0, 1] in the folder corresponding to the model and gesture it was recorded for, where each column is structured as shown below. Each recording yields a single file.
+Training data is simply saved as a csv file of floats in[0, 1] in the folder corresponding to the model and gesture it was recorded for, where each column is structured as shown below. Each recording yields a single file.
 
-| Frame | P1$_x$ | P1$_y$ | P2$_x$ | P2$_y$ | ... | P17$_x$ | P17$_y$ |
+| Frame | P1x | P1y | P2x | P2y | ... | P17x | P17y |
 |-|-|-|-|-|-|-|-|
 | 1 | float | float | float | float | float | float | float |
 | 2 | float | float | float | float | float | float | float |
@@ -116,11 +116,11 @@ Data is dispatched through OSC at every frame, with different adresses reserved 
 **\\\<root>\pose**
 Pose data for the current frame structured identically to a row of trainig data
 **\\\<root>\mvmt**
-Movement ($\triangle$Pose) for every point at current frame, structured the same as pose data.
+Movement (delta(Pose)) for every point at current frame, structured the same as pose data.
 **\\\<root>\extr**
 3D estimate of the movement of each extremity point (wrists, ankles). Structured as follows below. Z-axis pose/
 
-| Right wrist$_x$ | ...$_y$ | ...$_z$ | Left wrist$_x$ | ...$_y$ | ...$_z$ | Right ankle_x$ | ...$_y$ | ...$_z$ | Left ankle$_x$ | ...$_y$ | ...$_z$ |
+| Right wrist_x | ...y | ...z | Left wrist_x | ...y | ...z | Right ankle_x | ...y | ...z | Left ankle_x | ...y | ...z |
 |-|-|-|-|-|-|-|-|-|-|-|-|
 | float | float | float | float | float | float | float | float | float | float | float | float |
 
@@ -132,5 +132,5 @@ Simply a boolean value sent at the end of a performance for potential communicat
 ### Heuristics
 
 - **Momentum**: Helps smooth out data. The pose at the current frame is the previous pose + the current movement, which is a moving average calculated as: 
-$$Mvmt$_{frame}$ = (1-momentum)(Pose$_{frame}$-Pose$_{frame-1}$)+momentum(Mvmt$_{frame-1}$)
+Mvmt[frame] = (1-momentum)(Pose[frame]-Pose[frame-1])+momentum(Mvmt[frame-1])
 - **Confidence Threshold (CT)**: Filters out joint positions at which the pose recognition model's confidence of the location of said joint is below the set confidence threshold CT. Instead, the said joint will be considered to be moving in the same direction as it was in the previous frame. This can be very useful for creating smoother data, but if too high will create ever expanding frames that eventually cause the program to crash. This is also an issue when a video is very dark or occluded.
